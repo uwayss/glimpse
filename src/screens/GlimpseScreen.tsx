@@ -11,7 +11,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import Colors from "../constants/Colors";
+import { useTheme } from "../context/ThemeContext";
 import EntryCard from "../components/EntryCard";
 import { DayEntries, RootStackNavigationProp, Entry } from "../types";
 import { useEntries } from "@/context/EntryContext";
@@ -52,15 +52,18 @@ const GlimpseScreen = () => {
   const navigation = useNavigation<RootStackNavigationProp>();
   // Get live data and the loading state from our context
   const { entries, isLoading } = useEntries();
+  const { colors } = useTheme();
 
   // Memoize the grouped data so it only recalculates when entries change
   const sectionedData = useMemo(() => groupEntriesByDate(entries), [entries]);
+
+  const styles = stylesheet(colors);
 
   const renderContent = () => {
     if (isLoading) {
       return (
         <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       );
     }
@@ -95,7 +98,7 @@ const GlimpseScreen = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Glimpse</Text>
         <TouchableOpacity onPress={() => navigation.navigate("NewEntry")}>
-          <Ionicons name="add" size={32} color={Colors.text} />
+          <Ionicons name="add" size={32} color={colors.text} />
         </TouchableOpacity>
       </View>
       {renderContent()}
@@ -103,49 +106,51 @@ const GlimpseScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  headerTitle: {
-    fontSize: 34,
-    fontWeight: "bold",
-    color: Colors.text,
-  },
-  listContainer: {
-    paddingHorizontal: 20,
-  },
-  sectionHeader: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: Colors.text,
-    marginTop: 20,
-    marginBottom: 10,
-    backgroundColor: Colors.background,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emptyText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: Colors.text,
-  },
-  emptySubText: {
-    fontSize: 16,
-    color: Colors.lightText,
-    marginTop: 10,
-  },
-});
+function stylesheet(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+    },
+    headerTitle: {
+      fontSize: 34,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    listContainer: {
+      paddingHorizontal: 20,
+    },
+    sectionHeader: {
+      fontSize: 22,
+      fontWeight: "bold",
+      color: colors.text,
+      marginTop: 20,
+      marginBottom: 10,
+      backgroundColor: colors.background,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    emptyText: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    emptySubText: {
+      fontSize: 16,
+      color: colors.lightText,
+      marginTop: 10,
+    },
+  });
+}
 
 export default GlimpseScreen;

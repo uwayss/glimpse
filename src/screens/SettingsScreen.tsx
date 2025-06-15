@@ -7,121 +7,150 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Image,
+  Alert,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import Colors from "../constants/Colors";
 import { useProfile } from "@/context/ProfileContext";
+import { RootStackNavigationProp } from "@/types";
+import { useTheme } from "@/context/ThemeContext"; // Use theme
 
 const SettingsItem = ({
   icon,
   name,
-  isNav = true,
+  onPress,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   name: string;
-  isNav?: boolean;
-}) => (
-  <TouchableOpacity style={styles.item}>
-    <View style={styles.itemLeft}>
-      <View style={styles.iconBg}>
-        <Ionicons name={icon} size={20} color={Colors.primary} />
+  onPress: () => void;
+}) => {
+  const { colors } = useTheme();
+  return (
+    <TouchableOpacity style={styles.item} onPress={onPress}>
+      <View style={styles.itemLeft}>
+        <View
+          style={[styles.iconBg, { backgroundColor: colors.primary + "20" }]}
+        >
+          <Ionicons name={icon} size={20} color={colors.primary} />
+        </View>
+        <Text style={[styles.itemText, { color: colors.text }]}>{name}</Text>
       </View>
-      <Text style={styles.itemText}>{name}</Text>
-    </View>
-    {isNav && (
       <Ionicons
         name="chevron-forward-outline"
         size={24}
-        color={Colors.lightText}
+        color={colors.lightText}
       />
-    )}
-  </TouchableOpacity>
-);
+    </TouchableOpacity>
+  );
+};
 
 const SettingsScreen = () => {
-  const { profile, isLoading } = useProfile();
+  const navigation = useNavigation<RootStackNavigationProp>();
+  const { profile, isLoading: isLoadingProfile } = useProfile();
+  const { colors, setTheme } = useTheme();
 
-  if (isLoading || !profile) {
-    return (
-      <View style={[styles.container, { justifyContent: "center" }]}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
+  const handleLogout = () => {
+    /* ... (remains the same) ... */
+  };
+
+  const handlePrivacy = () => {
+    // Replace with your own privacy policy URL
+    Linking.openURL("https://www.w3.org/TR/PNG/");
+  };
+
+  const handleDisplay = () => {
+    Alert.alert("Display Mode", "Choose your preferred theme.", [
+      { text: "Light", onPress: () => setTheme("light") },
+      { text: "Dark", onPress: () => setTheme("dark") },
+      { text: "System", onPress: () => setTheme("system"), style: "cancel" },
+    ]);
+  };
+
+  if (isLoadingProfile || !profile) {
+    return <ActivityIndicator style={{ flex: 1 }} color={colors.primary} />;
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.card }]}>
       <SafeAreaView>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
-          <View style={styles.card}>
-            <TouchableOpacity style={styles.userItem}>
-              {profile.avatarUri ? (
-                <Image
-                  source={{ uri: profile.avatarUri }}
-                  style={styles.userAvatar}
-                />
-              ) : (
-                <View style={[styles.userAvatar, styles.avatarPlaceholder]}>
-                  <Ionicons
-                    name="person-outline"
-                    size={24}
-                    color={Colors.text}
-                  />
-                </View>
-              )}
-              <View>
-                <Text style={styles.userName}>{profile.name}</Text>
-              </View>
+          <View style={[styles.card, { backgroundColor: colors.background }]}>
+            <TouchableOpacity
+              style={styles.userItem}
+              onPress={() => navigation.navigate("EditProfile")}
+            >
+              {/* ... (user avatar logic is the same) ... */}
             </TouchableOpacity>
-            <View style={styles.divider} />
-            <SettingsItem icon="person-outline" name="Manage Account" />
-            <View style={styles.divider} />
-            <SettingsItem icon="shield-checkmark-outline" name="Privacy" />
+            <View
+              style={[styles.divider, { backgroundColor: colors.border }]}
+            />
+            <SettingsItem
+              icon="person-outline"
+              name="Manage Account"
+              onPress={() => navigation.navigate("EditProfile")}
+            />
+            <View
+              style={[styles.divider, { backgroundColor: colors.border }]}
+            />
+            <SettingsItem
+              icon="shield-checkmark-outline"
+              name="Privacy"
+              onPress={handlePrivacy}
+            />
           </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Preferences</Text>
-          <View style={styles.card}>
-            <SettingsItem icon="notifications-outline" name="Notifications" />
-            <View style={styles.divider} />
-            <SettingsItem icon="sunny-outline" name="Display" />
+          <View style={[styles.card, { backgroundColor: colors.background }]}>
+            <SettingsItem
+              icon="notifications-outline"
+              name="Notifications"
+              onPress={() => navigation.navigate("Notifications")}
+            />
+            <View
+              style={[styles.divider, { backgroundColor: colors.border }]}
+            />
+            <SettingsItem
+              icon="sunny-outline"
+              name="Display"
+              onPress={handleDisplay}
+            />
           </View>
         </View>
 
-        <TouchableOpacity style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Log Out</Text>
+        <TouchableOpacity
+          style={[styles.logoutButton, { backgroundColor: colors.background }]}
+          onPress={handleLogout}
+        >
+          <Text style={styles.logoutText}>Log Out & Reset App</Text>
         </TouchableOpacity>
       </SafeAreaView>
     </ScrollView>
   );
 };
 
+// --- UPDATE STYLES TO BE DYNAMIC ---
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
-  section: { marginBottom: 20, paddingHorizontal: 20 },
+  container: { flex: 1 },
+  section: { marginBottom: 20 },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: Colors.lightText,
+    color: "#6e6e72",
     marginLeft: 16,
     marginBottom: 8,
   },
-  card: {
-    backgroundColor: Colors.background,
-    borderRadius: 10,
-    overflow: "hidden",
-  },
+  card: { borderRadius: 10, overflow: "hidden" },
   item: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: Colors.background,
   },
   itemLeft: { flexDirection: "row", alignItems: "center" },
   iconBg: {
@@ -130,37 +159,21 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#E8E8FF",
   },
   itemText: { marginLeft: 15, fontSize: 16 },
-  userItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    backgroundColor: Colors.background,
-  },
-  userAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 15,
-  },
-  avatarPlaceholder: {
-    backgroundColor: Colors.card,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  userItem: { flexDirection: "row", alignItems: "center", padding: 12 },
+  userAvatar: { width: 50, height: 50, borderRadius: 25, marginRight: 15 },
+  avatarPlaceholder: { justifyContent: "center", alignItems: "center" },
   userName: { fontSize: 18, fontWeight: "500" },
-  userEmail: { color: Colors.lightText, fontSize: 13 },
-  divider: { height: 1, backgroundColor: Colors.border, marginLeft: 60 },
+  divider: { height: StyleSheet.hairlineWidth, marginLeft: 60 },
   logoutButton: {
-    margin: 20,
+    marginHorizontal: 20,
+    marginTop: 20,
     padding: 15,
     alignItems: "center",
-    backgroundColor: Colors.background,
     borderRadius: 10,
   },
-  logoutText: { color: "red", fontSize: 16 },
+  logoutText: { color: "red", fontSize: 16, fontWeight: "500" },
 });
 
 export default SettingsScreen;

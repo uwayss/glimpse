@@ -14,15 +14,20 @@ const STORAGE_KEY = "@glimpse_entries";
 
 interface EntryContextType {
   entries: Entry[];
-  addEntry: (entry: Omit<Entry, "id" | "date" | "time">) => void;
-  deleteEntry: (id: string) => void; // <-- ADD DELETE FUNCTION
+  addEntry: (
+    entry: Omit<Entry, "id" | "date" | "time" | "imageUri">,
+    imageUri?: string | null
+  ) => void;
+  deleteEntry: (id: string) => void;
+  clearAllEntries: () => void; // <-- ADD THIS
   isLoading: boolean;
 }
 
 const EntryContext = createContext<EntryContextType>({
   entries: [],
   addEntry: () => {},
-  deleteEntry: () => {}, // <-- ADD DEFAULT
+  deleteEntry: () => {},
+  clearAllEntries: () => {}, // <-- ADD DEFAULT
   isLoading: true,
 });
 
@@ -30,7 +35,6 @@ export const EntryProvider = ({ children }: PropsWithChildren) => {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // This function saves the current entries array to AsyncStorage
   const saveEntriesToStorage = async (updatedEntries: Entry[]) => {
     try {
       const jsonValue = JSON.stringify(updatedEntries);
@@ -58,7 +62,8 @@ export const EntryProvider = ({ children }: PropsWithChildren) => {
   }, []);
 
   const addEntry = async (
-    newEntryData: Omit<Entry, "id" | "date" | "time">
+    newEntryData: Omit<Entry, "id" | "date" | "time" | "imageUri">,
+    imageUri: string | null = null
   ) => {
     const newEntry: Entry = {
       id: Date.now().toString(),
@@ -68,6 +73,7 @@ export const EntryProvider = ({ children }: PropsWithChildren) => {
         minute: "2-digit",
       }),
       ...newEntryData,
+      imageUri: imageUri, // Add the image URI to the entry
       icon: newEntryData.icon || "book-outline",
       iconColor: newEntryData.iconColor || Colors.primary,
     };
@@ -77,16 +83,25 @@ export const EntryProvider = ({ children }: PropsWithChildren) => {
     await saveEntriesToStorage(updatedEntries);
   };
 
-  // --- NEW DELETE FUNCTION ---
   const deleteEntry = async (id: string) => {
     const updatedEntries = entries.filter((entry) => entry.id !== id);
     setEntries(updatedEntries);
     await saveEntriesToStorage(updatedEntries);
   };
 
+  // --- NEW FUNCTION TO CLEAR DATA ---
+  const clearAllEntries = async () => {
+    try {
+      setEntries([]); // Clear state
+      await AsyncStorage.removeItem(STORAGE_KEY); // Remove from storage
+    } catch (e) {
+      console.error("Failed to clear entries from storage", e);
+    }
+  };
+
   return (
     <EntryContext.Provider
-      value={{ entries, addEntry, deleteEntry, isLoading }}
+      value={{ entries, addEntry, deleteEntry, clearAllEntries, isLoading }}
     >
       {children}
     </EntryContext.Provider>

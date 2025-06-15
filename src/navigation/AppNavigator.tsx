@@ -6,22 +6,24 @@ import BottomTabNavigator from "./BottomTabNavigator";
 import NewEntryScreen from "../screens/NewEntryScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import EditProfileScreen from "../screens/EditProfileScreen";
-import Colors from "../constants/Colors";
+import NotificationsScreen from "../screens/NotificationsScreen";
 import { RootStackParamList } from "../types";
+import { useTheme } from "../context/ThemeContext";
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => {
+  const { colors } = useTheme();
   return (
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
-            backgroundColor: Colors.background,
+            backgroundColor: colors.background,
             shadowOpacity: 0,
             elevation: 0,
           },
-          headerTintColor: Colors.text,
+          headerTintColor: colors.text,
         }}
       >
         <Stack.Screen
@@ -40,6 +42,14 @@ const AppNavigator = () => {
           component={EditProfileScreen}
           options={{
             title: "Edit Profile",
+            presentation: "modal", // Opens as a modal like NewEntry
+          }}
+        />
+        <Stack.Screen
+          name="Notifications"
+          component={NotificationsScreen}
+          options={{
+            title: "Notifications",
             presentation: "modal", // Opens as a modal like NewEntry
           }}
         />

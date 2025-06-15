@@ -13,6 +13,7 @@ export type Entry = {
   content?: string;
   icon?: keyof typeof Ionicons.glyphMap;
   iconColor?: string;
+  imageUri?: string | null; // <-- ADD THIS
 };
 
 export type DayEntries = {
@@ -46,6 +47,7 @@ export type RootStackParamList = {
   NewEntry: undefined;
   Settings: undefined;
   EditProfile: undefined;
+  Notifications: undefined;
 };
 
 export type RootStackNavigationProp = StackNavigationProp<RootStackParamList>;

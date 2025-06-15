@@ -12,7 +12,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import Colors from "../constants/Colors";
+import { useTheme } from "../context/ThemeContext";
 import { RootStackNavigationProp } from "@/types";
 import { useEntries } from "@/context/EntryContext";
 import { useProfile } from "@/context/ProfileContext";
@@ -82,17 +82,22 @@ const StatBox = ({
 }: {
   value: string | number;
   label: string;
-}) => (
-  <View style={styles.statBox}>
-    <Text style={styles.statValue}>{value}</Text>
-    <Text style={styles.statLabel}>{label}</Text>
-  </View>
-);
+}) => {
+  const { colors } = useTheme();
+  const styles = stylesheet(colors);
+  return (
+    <View style={styles.statBox}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+};
 
 const ProfileScreen = () => {
   const navigation = useNavigation<RootStackNavigationProp>();
   const { entries, isLoading: isLoadingEntries } = useEntries();
   const { profile, isLoading: isLoadingProfile } = useProfile();
+  const { colors } = useTheme();
 
   const stats = useMemo(() => {
     const allDates = entries.map((e) => e.date).filter((d): d is string => !!d);
@@ -107,10 +112,11 @@ const ProfileScreen = () => {
 
   const isLoading = isLoadingEntries || isLoadingProfile;
 
+  const styles = stylesheet(colors);
   if (isLoading || !profile) {
     return (
       <SafeAreaView style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
@@ -125,13 +131,13 @@ const ProfileScreen = () => {
               onPress={() => navigation.navigate("EditProfile")}
               style={styles.headerButton}
             >
-              <Ionicons name="create-outline" size={26} color={Colors.text} />
+              <Ionicons name="create-outline" size={26} color={colors.text} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => navigation.navigate("Settings")}
               style={styles.headerButton}
             >
-              <Ionicons name="settings-outline" size={26} color={Colors.text} />
+              <Ionicons name="settings-outline" size={26} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>
@@ -144,7 +150,7 @@ const ProfileScreen = () => {
             />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <Ionicons name="person-outline" size={60} color={Colors.text} />
+              <Ionicons name="person-outline" size={60} color={colors.text} />
             </View>
           )}
           <Text style={styles.name}>{profile.name}</Text>
@@ -175,75 +181,76 @@ const ProfileScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  loadingContainer: { justifyContent: "center", alignItems: "center" },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    marginTop: 10,
-  },
-  headerTitle: { fontSize: 34, fontWeight: "bold" },
-  headerButtons: {
-    flexDirection: "row",
-  },
-  headerButton: {
-    marginLeft: 20,
-  },
-  profileInfo: { alignItems: "center", marginTop: 20 },
-  avatarImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 20,
-  },
-  avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: Colors.card,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  name: { fontSize: 28, fontWeight: "bold" },
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 30,
-    paddingHorizontal: 20,
-  },
-  statBox: {
-    alignItems: "center",
-    backgroundColor: Colors.card,
-    paddingVertical: 15,
-    borderRadius: 10,
-    width: "30%",
-  },
-  statValue: { fontSize: 22, fontWeight: "bold" },
-  statLabel: { fontSize: 14, color: Colors.lightText, marginTop: 5 },
-  statsSection: { padding: 20, marginTop: 20 },
-  statsTitle: { fontSize: 22, fontWeight: "bold", marginBottom: 15 },
-  statsGrid: { flexDirection: "row", justifyContent: "space-between" },
-  largeStatBox: {
-    backgroundColor: Colors.card,
-    padding: 20,
-    borderRadius: 15,
-    width: "48%",
-    alignItems: "center",
-    height: 120,
-    justifyContent: "center",
-  },
-  largeStatLabel: {
-    fontSize: 14,
-    color: Colors.lightText,
-    textAlign: "center",
-  },
-  largeStatValue: { fontSize: 28, fontWeight: "bold", marginTop: 10 },
-});
-
+function stylesheet(colors: any) {
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    loadingContainer: { justifyContent: "center", alignItems: "center" },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      marginTop: 10,
+    },
+    headerTitle: { fontSize: 34, fontWeight: "bold" },
+    headerButtons: {
+      flexDirection: "row",
+    },
+    headerButton: {
+      marginLeft: 20,
+    },
+    profileInfo: { alignItems: "center", marginTop: 20 },
+    avatarImage: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      marginBottom: 20,
+    },
+    avatarPlaceholder: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      backgroundColor: colors.card,
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 20,
+    },
+    name: { fontSize: 28, fontWeight: "bold" },
+    statsRow: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+      marginTop: 30,
+      paddingHorizontal: 20,
+    },
+    statBox: {
+      alignItems: "center",
+      backgroundColor: colors.card,
+      paddingVertical: 15,
+      borderRadius: 10,
+      width: "30%",
+    },
+    statValue: { fontSize: 22, fontWeight: "bold" },
+    statLabel: { fontSize: 14, color: colors.lightText, marginTop: 5 },
+    statsSection: { padding: 20, marginTop: 20 },
+    statsTitle: { fontSize: 22, fontWeight: "bold", marginBottom: 15 },
+    statsGrid: { flexDirection: "row", justifyContent: "space-between" },
+    largeStatBox: {
+      backgroundColor: colors.card,
+      padding: 20,
+      borderRadius: 15,
+      width: "48%",
+      alignItems: "center",
+      height: 120,
+      justifyContent: "center",
+    },
+    largeStatLabel: {
+      fontSize: 14,
+      color: colors.lightText,
+      textAlign: "center",
+    },
+    largeStatValue: { fontSize: 28, fontWeight: "bold", marginTop: 10 },
+  });
+  return styles;
+}
 export default ProfileScreen;

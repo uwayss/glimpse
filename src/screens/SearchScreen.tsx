@@ -11,12 +11,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import Colors from "../constants/Colors";
+import { useTheme } from "../context/ThemeContext";
 import { useEntries } from "@/context/EntryContext";
 
 const SearchScreen = () => {
   const { entries, isLoading } = useEntries();
   const [searchQuery, setSearchQuery] = useState("");
+  const { colors } = useTheme();
 
   const filteredEntries = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -31,10 +32,12 @@ const SearchScreen = () => {
     );
   }, [searchQuery, entries]);
 
+  const styles = stylesheet(colors);
+
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
@@ -45,13 +48,13 @@ const SearchScreen = () => {
         <Ionicons
           name="search"
           size={20}
-          color={Colors.lightText}
+          color={colors.lightText}
           style={styles.searchIcon}
         />
         <TextInput
           placeholder="Search"
           style={styles.searchInput}
-          placeholderTextColor={Colors.lightText}
+          placeholderTextColor={colors.lightText}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -91,54 +94,61 @@ const SearchScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    paddingHorizontal: 20,
-    paddingTop: 10,
-  },
-  loadingContainer: { justifyContent: "center", alignItems: "center" },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.card,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-  },
-  searchIcon: { marginRight: 10 },
-  searchInput: {
-    flex: 1,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: Colors.text,
-  },
-  recentTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginVertical: 20,
-  },
-  recentItem: { flexDirection: "row", alignItems: "center", marginBottom: 15 },
-  recentIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 10,
-    marginRight: 15,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  recentItemTitle: { fontSize: 16, fontWeight: "500" },
-  recentItemDate: { color: Colors.lightText, marginTop: 5 },
-  noResultsContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 50,
-  },
-  noResultsText: {
-    fontSize: 16,
-    color: Colors.lightText,
-  },
-});
+function stylesheet(colors: any) {
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      paddingHorizontal: 20,
+      paddingTop: 10,
+    },
+    loadingContainer: { justifyContent: "center", alignItems: "center" },
+    searchContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.card,
+      borderRadius: 10,
+      paddingHorizontal: 10,
+    },
+    searchIcon: { marginRight: 10 },
+    searchInput: {
+      flex: 1,
+      paddingVertical: 12,
+      fontSize: 16,
+      color: colors.text,
+    },
+    recentTitle: {
+      fontSize: 22,
+      fontWeight: "bold",
+      marginVertical: 20,
+    },
+    recentItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 15,
+    },
+    recentIcon: {
+      width: 50,
+      height: 50,
+      borderRadius: 10,
+      marginRight: 15,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    recentItemTitle: { fontSize: 16, fontWeight: "500" },
+    recentItemDate: { color: colors.lightText, marginTop: 5 },
+    noResultsContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      marginTop: 50,
+    },
+    noResultsText: {
+      fontSize: 16,
+      color: colors.lightText,
+    },
+  });
+  return styles;
+}
 
 export default SearchScreen;

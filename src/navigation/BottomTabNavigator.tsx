@@ -8,23 +8,25 @@ import GlimpseScreen from "../screens/GlimpseScreen";
 import PastEntriesScreen from "../screens/PastEntriesScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import SearchScreen from "../screens/SearchScreen";
-import Colors from "../constants/Colors";
 import NewEntryScreen from "../screens/NewEntryScreen";
 import { BottomTabParamList, RootStackParamList } from "../types";
+import { useTheme } from "../context/ThemeContext";
 
 // We DO NOT need the complex CompositeNavigationProp type. This is much cleaner.
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();
 
 const BottomTabNavigator = () => {
+  const { colors } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
-        tabBarStyle: { backgroundColor: Colors.background },
-        tabBarActiveTintColor: Colors.tabIconSelected,
-        tabBarInactiveTintColor: Colors.tabIconDefault,
+        tabBarStyle: { backgroundColor: colors.background },
+        tabBarActiveTintColor: colors.tabIconSelected,
+        tabBarInactiveTintColor: colors.tabIconDefault,
+        tabBarLabelPosition: "beside-icon",
       }}
     >
       <Tab.Screen

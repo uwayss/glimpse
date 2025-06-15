@@ -10,10 +10,9 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import Colors from "../constants/Colors";
 import { Entry } from "../types";
 import { useEntries } from "@/context/EntryContext";
-
+import { useTheme } from "../context/ThemeContext";
 const { width } = Dimensions.get("window");
 
 export const ITEM_HEIGHT = 350;
@@ -62,14 +61,15 @@ const TimelineEntryCard = ({
       },
     ]);
   };
-
+  const { colors } = useTheme();
+  const styles = stylesheet(colors);
   return (
     <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
       <Animated.View
         style={[styles.deleteButton, { opacity: deleteButtonOpacity }]}
       >
         <TouchableOpacity onPress={handleDelete}>
-          <Ionicons name="trash-outline" size={24} color={Colors.lightText} />
+          <Ionicons name="trash-outline" size={24} color={colors.lightText} />
         </TouchableOpacity>
       </Animated.View>
 
@@ -84,54 +84,54 @@ const TimelineEntryCard = ({
     </Animated.View>
   );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    width: ITEM_WIDTH,
-    height: ITEM_HEIGHT,
-    backgroundColor: Colors.background,
-    borderRadius: 20,
-    padding: 20,
-    marginVertical: VERTICAL_MARGIN,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  deleteButton: {
-    position: "absolute",
-    top: 20,
-    right: 20,
-  },
-  iconContainer: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: Colors.text,
-    marginBottom: 25,
-    textAlign: "center",
-  },
-  time: {
-    fontSize: 16,
-    color: Colors.lightText,
-    marginBottom: 15,
-  },
-  content: {
-    fontSize: 16,
-    color: Colors.text,
-    textAlign: "center",
-    lineHeight: 24,
-  },
-});
-
+function stylesheet(colors: any) {
+  return StyleSheet.create({
+    card: {
+      width: ITEM_WIDTH,
+      height: ITEM_HEIGHT,
+      backgroundColor: colors.background,
+      borderRadius: 20,
+      padding: 20,
+      marginVertical: VERTICAL_MARGIN,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 5 },
+      shadowOpacity: 0.1,
+      shadowRadius: 10,
+      elevation: 6,
+    },
+    deleteButton: {
+      position: "absolute",
+      top: 20,
+      right: 20,
+    },
+    iconContainer: {
+      width: 90,
+      height: 90,
+      borderRadius: 45,
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 20,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: colors.text,
+      marginBottom: 25,
+      textAlign: "center",
+    },
+    time: {
+      fontSize: 16,
+      color: colors.lightText,
+      marginBottom: 15,
+    },
+    content: {
+      fontSize: 16,
+      color: colors.text,
+      textAlign: "center",
+      lineHeight: 24,
+    },
+  });
+}
 export default TimelineEntryCard;

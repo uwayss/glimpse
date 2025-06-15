@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar, DateData } from "react-native-calendars";
-import Colors from "../constants/Colors";
+import { useTheme } from "../context/ThemeContext";
 import { Entry } from "../types";
 import TimelineEntryCard, {
   SNAP_INTERVAL,
@@ -21,6 +21,7 @@ import { useEntries } from "@/context/EntryContext";
 
 const PastEntriesScreen = () => {
   const { entries, isLoading } = useEntries();
+  const { colors } = useTheme();
   const [activeView, setActiveView] = useState<"calendar" | "timeline">(
     "calendar"
   );
@@ -44,20 +45,20 @@ const PastEntriesScreen = () => {
       };
     } = entries.reduce((acc, entry: Entry) => {
       if (entry.date) {
-        acc[entry.date] = { marked: true, dotColor: Colors.primary };
+        acc[entry.date] = { marked: true, dotColor: colors.primary };
       }
       return acc;
     }, {} as { [key: string]: { marked: boolean; dotColor: string; selected?: boolean; selectedColor?: string } });
 
     if (marks[selectedDate]) {
       marks[selectedDate].selected = true;
-      marks[selectedDate].selectedColor = Colors.primary;
+      marks[selectedDate].selectedColor = colors.primary;
     } else {
-      marks[selectedDate] = { selected: true, selectedColor: Colors.primary };
+      marks[selectedDate] = { selected: true, selectedColor: colors.primary };
     }
 
     return marks;
-  }, [selectedDate, entries]);
+  }, [selectedDate, entries, colors.primary]);
 
   function SwitcherButton({
     text,
@@ -84,7 +85,7 @@ const PastEntriesScreen = () => {
     if (isLoading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       );
     }
@@ -100,14 +101,14 @@ const PastEntriesScreen = () => {
               }
               markedDates={markedDates}
               theme={{
-                backgroundColor: Colors.background,
-                calendarBackground: Colors.background,
-                textSectionTitleColor: Colors.lightText,
-                todayTextColor: Colors.primary,
-                dayTextColor: Colors.text,
-                textDisabledColor: Colors.border,
-                arrowColor: Colors.primary,
-                monthTextColor: Colors.text,
+                backgroundColor: colors.background,
+                calendarBackground: colors.background,
+                textSectionTitleColor: colors.lightText,
+                todayTextColor: colors.primary,
+                dayTextColor: colors.text,
+                textDisabledColor: colors.border,
+                arrowColor: colors.primary,
+                monthTextColor: colors.text,
                 textDayFontWeight: "300",
                 textMonthFontWeight: "bold",
                 textDayHeaderFontWeight: "300",
@@ -160,6 +161,8 @@ const PastEntriesScreen = () => {
     );
   };
 
+  const styles = stylesheet(colors);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -181,75 +184,75 @@ const PastEntriesScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  contentContainer: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-  },
-  headerTitle: {
-    fontSize: 34,
-    fontWeight: "bold",
-    color: Colors.text,
-  },
-  switcherContainer: {
-    flexDirection: "row",
-    margin: 20,
-    backgroundColor: Colors.card,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-  },
-  switcherButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    margin: 3,
-  },
-  activeButton: {
-    backgroundColor: Colors.background,
-  },
-  switcherText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: Colors.lightText,
-  },
-  activeText: {
-    color: Colors.primary,
-  },
-  entriesListContainer: {
-    paddingHorizontal: 20,
-    marginTop: 20,
-    paddingBottom: 20,
-  },
-  entriesListTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 15,
-  },
-  noEntriesContainer: {
-    height: 100,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  noEntriesText: {
-    fontSize: 16,
-    color: Colors.lightText,
-  },
-});
-
+function stylesheet(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    contentContainer: {
+      flex: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 20,
+      paddingBottom: 10,
+    },
+    headerTitle: {
+      fontSize: 34,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    switcherContainer: {
+      flexDirection: "row",
+      margin: 20,
+      backgroundColor: colors.card,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: "#E0E0E0",
+    },
+    switcherButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 8,
+      alignItems: "center",
+      margin: 3,
+    },
+    activeButton: {
+      backgroundColor: colors.background,
+    },
+    switcherText: {
+      fontSize: 16,
+      fontWeight: "500",
+      color: colors.lightText,
+    },
+    activeText: {
+      color: colors.primary,
+    },
+    entriesListContainer: {
+      paddingHorizontal: 20,
+      marginTop: 20,
+      paddingBottom: 20,
+    },
+    entriesListTitle: {
+      fontSize: 18,
+      fontWeight: "bold",
+      marginBottom: 15,
+    },
+    noEntriesContainer: {
+      height: 100,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    noEntriesText: {
+      fontSize: 16,
+      color: colors.lightText,
+    },
+  });
+}
 export default PastEntriesScreen;
