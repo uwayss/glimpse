@@ -1,5 +1,5 @@
 // src/screens/SearchScreen.tsx
-import React from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -7,44 +7,38 @@ import {
   TextInput,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../constants/Colors";
-import { SearchResult } from "../types";
-
-const RECENT_SEARCHES: SearchResult[] = [
-  {
-    id: "1",
-    title: "New Year's Eve Celebration",
-    date: "2024-01-01",
-    icon: "sparkles-outline",
-    iconColor: "#FFD700",
-  },
-  {
-    id: "2",
-    title: "Christmas Dinner",
-    date: "2023-12-25",
-    icon: "snow-outline",
-    iconColor: "#ADD8E6",
-  },
-  {
-    id: "3",
-    title: "Weekend Getaway",
-    date: "2023-12-15",
-    icon: "airplane-outline",
-    iconColor: "#87CEEB",
-  },
-  {
-    id: "4",
-    title: "Thanksgiving Feast",
-    date: "2023-11-28",
-    icon: "leaf-outline",
-    iconColor: "#DEB887",
-  },
-];
+import { useEntries } from "@/context/EntryContext";
 
 const SearchScreen = () => {
+  const { entries, isLoading } = useEntries();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredEntries = useMemo(() => {
+    if (!searchQuery.trim()) {
+      // If search is empty, show the 10 most recent entries
+      return entries.slice(0, 10);
+    }
+    // Otherwise, filter by title and content
+    return entries.filter(
+      (entry) =>
+        entry.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        entry.content?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery, entries]);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.searchContainer}>
@@ -58,41 +52,39 @@ const SearchScreen = () => {
           placeholder="Search"
           style={styles.searchInput}
           placeholderTextColor={Colors.lightText}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
         />
       </View>
 
-      <View style={styles.filterContainer}>
-        <TouchableOpacity style={[styles.filterButton, styles.activeFilter]}>
-          <Text style={styles.activeFilterText}>All</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterButton}>
-          <Text style={styles.filterText}>Travel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterButton}>
-          <Text style={styles.filterText}>Food</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterButton}>
-          <Text style={styles.filterText}>Work</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.recentTitle}>Recent</Text>
+      <Text style={styles.recentTitle}>
+        {searchQuery.trim() ? "Search Results" : "Recent Entries"}
+      </Text>
 
       <FlatList
-        data={RECENT_SEARCHES}
+        data={filteredEntries}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.recentItem}>
             <View
               style={[styles.recentIcon, { backgroundColor: item.iconColor }]}
             >
-              <Ionicons name={item.icon} size={24} color="white" />
+              <Ionicons
+                name={item.icon || "book-outline"}
+                size={24}
+                color="white"
+              />
             </View>
             <View>
               <Text style={styles.recentItemTitle}>{item.title}</Text>
               <Text style={styles.recentItemDate}>{item.date}</Text>
             </View>
           </TouchableOpacity>
+        )}
+        ListEmptyComponent={() => (
+          <View style={styles.noResultsContainer}>
+            <Text style={styles.noResultsText}>No entries found.</Text>
+          </View>
         )}
       />
     </SafeAreaView>
@@ -106,6 +98,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 10,
   },
+  loadingContainer: { justifyContent: "center", alignItems: "center" },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -120,22 +113,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.text,
   },
-  filterContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    gap: 10,
+  recentTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
     marginVertical: 20,
   },
-  filterButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    backgroundColor: Colors.card,
-  },
-  activeFilter: { backgroundColor: Colors.primary },
-  filterText: { color: Colors.text },
-  activeFilterText: { color: "white" },
-  recentTitle: { fontSize: 22, fontWeight: "bold", marginBottom: 15 },
   recentItem: { flexDirection: "row", alignItems: "center", marginBottom: 15 },
   recentIcon: {
     width: 50,
@@ -147,6 +129,16 @@ const styles = StyleSheet.create({
   },
   recentItemTitle: { fontSize: 16, fontWeight: "500" },
   recentItemDate: { color: Colors.lightText, marginTop: 5 },
+  noResultsContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 50,
+  },
+  noResultsText: {
+    fontSize: 16,
+    color: Colors.lightText,
+  },
 });
 
 export default SearchScreen;

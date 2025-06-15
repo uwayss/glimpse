@@ -6,10 +6,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../constants/Colors";
+import { useProfile } from "@/context/ProfileContext"; // Import the profile hook
 
 const SettingsItem = ({
   icon,
@@ -38,6 +40,16 @@ const SettingsItem = ({
 );
 
 const SettingsScreen = () => {
+  const { profile, isLoading } = useProfile(); // Get live profile data
+
+  if (isLoading || !profile) {
+    return (
+      <View style={[styles.container, { justifyContent: "center" }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
       <SafeAreaView>
@@ -45,12 +57,22 @@ const SettingsScreen = () => {
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.card}>
             <TouchableOpacity style={styles.userItem}>
-              <View style={[styles.userAvatar, { backgroundColor: "#DDBDF1" }]}>
-                <Ionicons name="person-outline" size={30} color="#5E2D8C" />
+              {/* --- Use live profile data here --- */}
+              <View
+                style={[
+                  styles.userAvatar,
+                  { backgroundColor: profile.avatarColor },
+                ]}
+              >
+                <Ionicons
+                  name="person-outline"
+                  size={30}
+                  color={profile.avatarIconColor}
+                />
               </View>
               <View>
-                <Text style={styles.userName}>Jennifer Lee</Text>
-                <Text style={styles.userEmail}>jennifer.lee@example.com</Text>
+                <Text style={styles.userName}>{profile.name}</Text>
+                <Text style={styles.userEmail}>{profile.username}</Text>
               </View>
             </TouchableOpacity>
             <View style={styles.divider} />

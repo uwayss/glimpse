@@ -1,9 +1,18 @@
 // src/components/TimelineEntryCard.tsx
 import React from "react";
-import { View, Text, StyleSheet, Dimensions, Animated } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  Animated,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../constants/Colors";
 import { Entry } from "../types";
+import { useEntries } from "@/context/EntryContext";
 
 const { width } = Dimensions.get("window");
 
@@ -23,6 +32,8 @@ const TimelineEntryCard = ({
   scrollY,
   index,
 }: TimelineEntryCardProps) => {
+  const { deleteEntry } = useEntries();
+
   const inputRange = [
     (index - 1) * SNAP_INTERVAL,
     index * SNAP_INTERVAL,
@@ -35,8 +46,33 @@ const TimelineEntryCard = ({
     extrapolate: "clamp",
   });
 
+  const deleteButtonOpacity = scrollY.interpolate({
+    inputRange,
+    outputRange: [0, 1, 0],
+    extrapolate: "clamp",
+  });
+
+  const handleDelete = () => {
+    Alert.alert("Delete Entry", "Are you sure you want to delete this entry?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => deleteEntry(entry.id),
+      },
+    ]);
+  };
+
   return (
     <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
+      <Animated.View
+        style={[styles.deleteButton, { opacity: deleteButtonOpacity }]}
+      >
+        <TouchableOpacity onPress={handleDelete}>
+          <Ionicons name="trash-outline" size={24} color={Colors.lightText} />
+        </TouchableOpacity>
+      </Animated.View>
+
       <View
         style={[styles.iconContainer, { backgroundColor: entry.iconColor }]}
       >
@@ -64,6 +100,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 6,
+  },
+  deleteButton: {
+    position: "absolute",
+    top: 20,
+    right: 20,
   },
   iconContainer: {
     width: 90,
