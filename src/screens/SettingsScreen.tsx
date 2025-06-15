@@ -7,11 +7,12 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../constants/Colors";
-import { useProfile } from "@/context/ProfileContext"; // Import the profile hook
+import { useProfile } from "@/context/ProfileContext";
 
 const SettingsItem = ({
   icon,
@@ -40,7 +41,7 @@ const SettingsItem = ({
 );
 
 const SettingsScreen = () => {
-  const { profile, isLoading } = useProfile(); // Get live profile data
+  const { profile, isLoading } = useProfile();
 
   if (isLoading || !profile) {
     return (
@@ -57,22 +58,22 @@ const SettingsScreen = () => {
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.card}>
             <TouchableOpacity style={styles.userItem}>
-              {/* --- Use live profile data here --- */}
-              <View
-                style={[
-                  styles.userAvatar,
-                  { backgroundColor: profile.avatarColor },
-                ]}
-              >
-                <Ionicons
-                  name="person-outline"
-                  size={30}
-                  color={profile.avatarIconColor}
+              {profile.avatarUri ? (
+                <Image
+                  source={{ uri: profile.avatarUri }}
+                  style={styles.userAvatar}
                 />
-              </View>
+              ) : (
+                <View style={[styles.userAvatar, styles.avatarPlaceholder]}>
+                  <Ionicons
+                    name="person-outline"
+                    size={24}
+                    color={Colors.text}
+                  />
+                </View>
+              )}
               <View>
                 <Text style={styles.userName}>{profile.name}</Text>
-                <Text style={styles.userEmail}>{profile.username}</Text>
               </View>
             </TouchableOpacity>
             <View style={styles.divider} />
@@ -143,6 +144,9 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     marginRight: 15,
+  },
+  avatarPlaceholder: {
+    backgroundColor: Colors.card,
     justifyContent: "center",
     alignItems: "center",
   },

@@ -8,15 +8,11 @@ import React, {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// The key we'll use to save the profile data on the device
 const PROFILE_STORAGE_KEY = "@glimpse_profile";
 
 interface Profile {
   name: string;
-  username: string;
-  joinDate: string;
-  avatarColor: string;
-  avatarIconColor: string;
+  avatarUri: string | null;
 }
 
 interface ProfileContextType {
@@ -25,13 +21,9 @@ interface ProfileContextType {
   isLoading: boolean;
 }
 
-// A default profile for the first time the app is launched
 const defaultProfile: Profile = {
-  name: "Ethan Carter",
-  username: "@ethan.carter",
-  joinDate: "Joined 2024",
-  avatarColor: "#DDBDF1",
-  avatarIconColor: "#5E2D8C",
+  name: "Glimpse User",
+  avatarUri: null,
 };
 
 const ProfileContext = createContext<ProfileContextType>({
@@ -51,7 +43,6 @@ export const ProfileProvider = ({ children }: PropsWithChildren) => {
         if (storedProfile) {
           setProfile(JSON.parse(storedProfile));
         } else {
-          // If no profile is stored, save and set the default one
           setProfile(defaultProfile);
           await AsyncStorage.setItem(
             PROFILE_STORAGE_KEY,
@@ -60,7 +51,6 @@ export const ProfileProvider = ({ children }: PropsWithChildren) => {
         }
       } catch (e) {
         console.error("Failed to load profile from storage", e);
-        // Fallback to default profile on error
         setProfile(defaultProfile);
       } finally {
         setIsLoading(false);

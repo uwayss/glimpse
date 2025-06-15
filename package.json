@@ -8,7 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint --fix",
-    "checks": "npm run lint && tsc --noEmit"
+    "checks": "npm run lint && tsc --noEmit",
+    "commit": "npm run checks && ups diff"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",

@@ -2,14 +2,13 @@
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import { NavigationContainer } from "@react-navigation/native";
-
 import BottomTabNavigator from "./BottomTabNavigator";
 import NewEntryScreen from "../screens/NewEntryScreen";
 import SettingsScreen from "../screens/SettingsScreen";
+import EditProfileScreen from "../screens/EditProfileScreen";
 import Colors from "../constants/Colors";
-import { RootStackParamList } from "../types"; // Import the new type
+import { RootStackParamList } from "../types";
 
-// Apply the type here
 const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => {
@@ -36,6 +35,14 @@ const AppNavigator = () => {
           options={{ presentation: "modal", headerShown: false }}
         />
         <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen
+          name="EditProfile"
+          component={EditProfileScreen}
+          options={{
+            title: "Edit Profile",
+            presentation: "modal", // Opens as a modal like NewEntry
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

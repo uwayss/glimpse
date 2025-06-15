@@ -6,6 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Image,
+  ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,7 +16,8 @@ import Colors from "../constants/Colors";
 import { RootStackNavigationProp } from "@/types";
 import { useEntries } from "@/context/EntryContext";
 import { useProfile } from "@/context/ProfileContext";
-// --- HELPER FUNCTIONS FOR STATS ---
+
+// --- NO CHANGES TO HELPER FUNCTIONS ---
 const getStreak = (dates: string[]): number => {
   if (dates.length === 0) return 0;
   const uniqueDates = [...new Set(dates)].sort(
@@ -93,10 +96,12 @@ const ProfileScreen = () => {
 
   const stats = useMemo(() => {
     const allDates = entries.map((e) => e.date).filter((d): d is string => !!d);
+    const uniqueDaysCount = new Set(allDates).size;
     return {
       totalEntries: entries.length,
       streak: getStreak(allDates),
       mostActiveDay: getMostActiveDay(allDates),
+      uniqueDays: uniqueDaysCount,
     };
   }, [entries]);
 
@@ -112,41 +117,61 @@ const ProfileScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
-          <Ionicons name="settings-outline" size={24} color={Colors.text} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.profileInfo}>
-        <View style={styles.avatar}>
-          <Ionicons name="person-outline" size={60} color={Colors.text} />
-        </View>
-        <Text style={styles.name}>{profile.name}</Text>
-        <Text style={styles.username}>{profile.username}</Text>
-        <Text style={styles.joinDate}>{profile.joinDate}</Text>
-      </View>
-
-      <View style={styles.statsRow}>
-        <StatBox value={stats.totalEntries} label="Entries" />
-        <StatBox value={stats.streak} label="Streak" />
-        <StatBox value={entries.length > 0 ? "🚀" : "0"} label="Days" />
-      </View>
-
-      <View style={styles.statsSection}>
-        <Text style={styles.statsTitle}>Stats</Text>
-        <View style={styles.statsGrid}>
-          <View style={styles.largeStatBox}>
-            <Text style={styles.largeStatLabel}>Avg entries / day</Text>
-            <Text style={styles.largeStatValue}>{stats.totalEntries}</Text>
-          </View>
-          <View style={styles.largeStatBox}>
-            <Text style={styles.largeStatLabel}>Most active day</Text>
-            <Text style={styles.largeStatValue}>{stats.mostActiveDay}</Text>
+      <ScrollView>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("EditProfile")}
+              style={styles.headerButton}
+            >
+              <Ionicons name="create-outline" size={26} color={Colors.text} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Settings")}
+              style={styles.headerButton}
+            >
+              <Ionicons name="settings-outline" size={26} color={Colors.text} />
+            </TouchableOpacity>
           </View>
         </View>
-      </View>
+
+        <View style={styles.profileInfo}>
+          {profile.avatarUri ? (
+            <Image
+              source={{ uri: profile.avatarUri }}
+              style={styles.avatarImage}
+            />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Ionicons name="person-outline" size={60} color={Colors.text} />
+            </View>
+          )}
+          <Text style={styles.name}>{profile.name}</Text>
+        </View>
+
+        <View style={styles.statsRow}>
+          <StatBox value={stats.totalEntries} label="Entries" />
+          <StatBox value={stats.streak} label="Streak" />
+          <StatBox value={stats.uniqueDays} label="Days" />
+        </View>
+
+        <View style={styles.statsSection}>
+          <Text style={styles.statsTitle}>Stats</Text>
+          <View style={styles.statsGrid}>
+            <View style={styles.largeStatBox}>
+              <Text style={styles.largeStatLabel}>Avg entries / day</Text>
+              <Text style={styles.largeStatValue}>
+                {stats.totalEntries / stats.streak}
+              </Text>
+            </View>
+            <View style={styles.largeStatBox}>
+              <Text style={styles.largeStatLabel}>Most active day</Text>
+              <Text style={styles.largeStatValue}>{stats.mostActiveDay}</Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -158,22 +183,34 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    marginTop: 10,
   },
   headerTitle: { fontSize: 34, fontWeight: "bold" },
+  headerButtons: {
+    flexDirection: "row",
+  },
+  headerButton: {
+    marginLeft: 20,
+  },
   profileInfo: { alignItems: "center", marginTop: 20 },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+  avatarImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: 20,
+  },
+  avatarPlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     backgroundColor: Colors.card,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 20,
   },
-  name: { fontSize: 24, fontWeight: "bold" },
-  username: { fontSize: 16, color: Colors.lightText },
-  joinDate: { fontSize: 14, color: Colors.lightText, marginTop: 5 },
+  name: { fontSize: 28, fontWeight: "bold" },
   statsRow: {
     flexDirection: "row",
     justifyContent: "space-around",
