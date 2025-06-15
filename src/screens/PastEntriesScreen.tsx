@@ -2,7 +2,6 @@
 import React, { useState, useMemo, useRef } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   Animated,
@@ -18,6 +17,7 @@ import TimelineEntryCard, {
 } from "../components/TimelineEntryCard";
 import EntryCard from "../components/EntryCard";
 import { useEntries } from "@/context/EntryContext";
+import ThemedText from "@/components/ThemedText";
 
 const PastEntriesScreen = () => {
   const { entries, isLoading } = useEntries();
@@ -74,9 +74,11 @@ const PastEntriesScreen = () => {
         style={[styles.switcherButton, isActive && styles.activeButton]}
         onPress={onPress}
       >
-        <Text style={[styles.switcherText, isActive && styles.activeText]}>
+        <ThemedText
+          style={[styles.switcherText, isActive && styles.activeText]}
+        >
           {text}
-        </Text>
+        </ThemedText>
       </TouchableOpacity>
     );
   }
@@ -118,18 +120,18 @@ const PastEntriesScreen = () => {
               }}
             />
             <View style={styles.entriesListContainer}>
-              <Text style={styles.entriesListTitle}>
+              <ThemedText style={styles.entriesListTitle}>
                 Entries for {selectedDate}
-              </Text>
+              </ThemedText>
               {entriesForSelectedDate.length > 0 ? (
                 entriesForSelectedDate.map((item: Entry) => (
                   <EntryCard key={item.id} entry={item} />
                 ))
               ) : (
                 <View style={styles.noEntriesContainer}>
-                  <Text style={styles.noEntriesText}>
+                  <ThemedText style={styles.noEntriesText}>
                     No entries for this day.
-                  </Text>
+                  </ThemedText>
                 </View>
               )}
             </View>
@@ -166,7 +168,7 @@ const PastEntriesScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Past Entries</Text>
+        <ThemedText style={styles.headerTitle}>Past Entries</ThemedText>
       </View>
       <View style={styles.switcherContainer}>
         <SwitcherButton

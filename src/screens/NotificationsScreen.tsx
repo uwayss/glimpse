@@ -1,15 +1,9 @@
 // src/screens/NotificationsScreen.tsx
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Switch,
-  Platform,
-} from "react-native";
+import { View, StyleSheet, ScrollView, Switch, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@/context/ThemeContext";
+import ThemedText from "@/components/ThemedText";
 
 const NOTIFICATIONS_ENABLED_KEY = "@glimpse_notifications_enabled";
 
@@ -23,7 +17,9 @@ const SettingsRow = ({
   const { colors } = useTheme();
   return (
     <View style={[styles.row, { borderBottomColor: colors.border }]}>
-      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+      <ThemedText style={[styles.label, { color: colors.text }]}>
+        {label}
+      </ThemedText>
       {children}
     </View>
   );
@@ -65,10 +61,10 @@ const NotificationsScreen = () => {
           />
         </SettingsRow>
       </View>
-      <Text style={[styles.description, { color: colors.lightText }]}>
+      <ThemedText style={[styles.description, { color: colors.lightText }]}>
         Enable push notifications to get reminders and summaries of your
         journey.
-      </Text>
+      </ThemedText>
     </ScrollView>
   );
 };

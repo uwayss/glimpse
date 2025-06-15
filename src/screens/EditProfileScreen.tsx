@@ -2,7 +2,6 @@
 import React, { useState, useLayoutEffect, useCallback } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -20,6 +19,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useProfile } from "@/context/ProfileContext";
 import { RootStackNavigationProp } from "@/types";
 import { Colors } from "react-native/Libraries/NewAppScreen";
+import ThemedText from "@/components/ThemedText";
 
 const EditProfileScreen = () => {
   const navigation = useNavigation<RootStackNavigationProp>();
@@ -60,11 +60,11 @@ const EditProfileScreen = () => {
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity onPress={handleSave} style={{ marginRight: 15 }}>
-          <Text
+          <ThemedText
             style={{ color: colors.primary, fontSize: 17, fontWeight: "600" }}
           >
             Save
-          </Text>
+          </ThemedText>
         </TouchableOpacity>
       ),
       headerLeft: () => (
@@ -72,7 +72,9 @@ const EditProfileScreen = () => {
           onPress={() => navigation.goBack()}
           style={{ marginLeft: 15 }}
         >
-          <Text style={{ color: colors.primary, fontSize: 17 }}>Cancel</Text>
+          <ThemedText style={{ color: colors.primary, fontSize: 17 }}>
+            Cancel
+          </ThemedText>
         </TouchableOpacity>
       ),
     });
@@ -85,15 +87,17 @@ const EditProfileScreen = () => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex}
       >
-        <View style={styles.privacyContainer}>
+        <View
+          style={[styles.privacyContainer, { backgroundColor: colors.card }]}
+        >
           <Ionicons
             name="lock-closed-outline"
             size={14}
             color={colors.lightText}
           />
-          <Text style={styles.privacyText}>
+          <ThemedText style={styles.privacyText}>
             Your name and photo are stored only on your device.
-          </Text>
+          </ThemedText>
         </View>
 
         <ScrollView contentContainerStyle={styles.content}>
@@ -105,11 +109,11 @@ const EditProfileScreen = () => {
                 <Ionicons name="camera-outline" size={40} color={colors.text} />
               </View>
             )}
-            <Text style={styles.changePhotoText}>Change Photo</Text>
+            <ThemedText style={styles.changePhotoText}>Change Photo</ThemedText>
           </TouchableOpacity>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Name</Text>
+            <ThemedText style={styles.inputLabel}>Name</ThemedText>
             <TextInput
               style={styles.input}
               value={name}

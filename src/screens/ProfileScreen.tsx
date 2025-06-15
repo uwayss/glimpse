@@ -2,7 +2,6 @@
 import React, { useMemo } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
@@ -16,6 +15,7 @@ import { useTheme } from "../context/ThemeContext";
 import { RootStackNavigationProp } from "@/types";
 import { useEntries } from "@/context/EntryContext";
 import { useProfile } from "@/context/ProfileContext";
+import ThemedText from "@/components/ThemedText";
 
 // --- NO CHANGES TO HELPER FUNCTIONS ---
 const getStreak = (dates: string[]): number => {
@@ -87,8 +87,8 @@ const StatBox = ({
   const styles = stylesheet(colors);
   return (
     <View style={styles.statBox}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <ThemedText style={styles.statValue}>{value}</ThemedText>
+      <ThemedText style={styles.statLabel}>{label}</ThemedText>
     </View>
   );
 };
@@ -125,7 +125,7 @@ const ProfileScreen = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
+          <ThemedText style={styles.headerTitle}>Profile</ThemedText>
           <View style={styles.headerButtons}>
             <TouchableOpacity
               onPress={() => navigation.navigate("EditProfile")}
@@ -153,7 +153,7 @@ const ProfileScreen = () => {
               <Ionicons name="person-outline" size={60} color={colors.text} />
             </View>
           )}
-          <Text style={styles.name}>{profile.name}</Text>
+          <ThemedText style={styles.name}>{profile.name}</ThemedText>
         </View>
 
         <View style={styles.statsRow}>
@@ -163,17 +163,23 @@ const ProfileScreen = () => {
         </View>
 
         <View style={styles.statsSection}>
-          <Text style={styles.statsTitle}>Stats</Text>
+          <ThemedText style={styles.statsTitle}>Stats</ThemedText>
           <View style={styles.statsGrid}>
             <View style={styles.largeStatBox}>
-              <Text style={styles.largeStatLabel}>Avg entries / day</Text>
-              <Text style={styles.largeStatValue}>
+              <ThemedText style={styles.largeStatLabel}>
+                Avg entries / day
+              </ThemedText>
+              <ThemedText style={styles.largeStatValue}>
                 {stats.totalEntries / stats.streak}
-              </Text>
+              </ThemedText>
             </View>
             <View style={styles.largeStatBox}>
-              <Text style={styles.largeStatLabel}>Most active day</Text>
-              <Text style={styles.largeStatValue}>{stats.mostActiveDay}</Text>
+              <ThemedText style={styles.largeStatLabel}>
+                Most active day
+              </ThemedText>
+              <ThemedText style={styles.largeStatValue}>
+                {stats.mostActiveDay}
+              </ThemedText>
             </View>
           </View>
         </View>

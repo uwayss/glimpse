@@ -1,9 +1,10 @@
 // src/components/EntryCard.tsx
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Entry } from "../types";
 import { useTheme } from "../context/ThemeContext";
+import ThemedText from "./ThemedText";
 
 type EntryCardProps = {
   entry: Entry;
@@ -13,11 +14,11 @@ const EntryCard = ({ entry }: EntryCardProps) => {
   const { colors } = useTheme();
   const styles = stylesheet(colors);
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.card }]}>
       <View style={styles.textContainer}>
-        <Text style={styles.time}>{entry.time}</Text>
-        <Text style={styles.title}>{entry.title}</Text>
-        <Text style={styles.content}>{entry.content}</Text>
+        <ThemedText style={styles.time}>{entry.time}</ThemedText>
+        <ThemedText style={styles.title}>{entry.title}</ThemedText>
+        <ThemedText style={styles.content}>{entry.content}</ThemedText>
       </View>
       <View
         style={[styles.iconContainer, { backgroundColor: entry.iconColor }]}

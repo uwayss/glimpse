@@ -2,7 +2,6 @@
 import React, { useMemo } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   SectionList,
   TouchableOpacity,
@@ -15,6 +14,7 @@ import { useTheme } from "../context/ThemeContext";
 import EntryCard from "../components/EntryCard";
 import { DayEntries, RootStackNavigationProp, Entry } from "../types";
 import { useEntries } from "@/context/EntryContext";
+import ThemedText from "@/components/ThemedText";
 
 // A helper function to group entries by date
 const groupEntriesByDate = (entries: Entry[]): DayEntries[] => {
@@ -75,7 +75,7 @@ const GlimpseScreen = () => {
           keyExtractor={(item, index) => item.id + index}
           renderItem={({ item }) => <EntryCard entry={item} />}
           renderSectionHeader={({ section: { title } }) => (
-            <Text style={styles.sectionHeader}>{title}</Text>
+            <ThemedText style={styles.sectionHeader}>{title}</ThemedText>
           )}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
@@ -85,10 +85,10 @@ const GlimpseScreen = () => {
 
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No entries yet.</Text>
-        <Text style={styles.emptySubText}>
+        <ThemedText style={styles.emptyText}>No entries yet.</ThemedText>
+        <ThemedText style={styles.emptySubText}>
           Tap the &apos;+&apos; to add your first glimpse!
-        </Text>
+        </ThemedText>
       </View>
     );
   };
@@ -96,7 +96,7 @@ const GlimpseScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Glimpse</Text>
+        <ThemedText style={styles.headerTitle}>Glimpse</ThemedText>
         <TouchableOpacity onPress={() => navigation.navigate("NewEntry")}>
           <Ionicons name="add" size={32} color={colors.text} />
         </TouchableOpacity>

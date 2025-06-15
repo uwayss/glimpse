@@ -2,7 +2,6 @@
 import React, { useState, useMemo } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
   FlatList,
@@ -13,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import { useEntries } from "@/context/EntryContext";
+import ThemedText from "@/components/ThemedText";
 
 const SearchScreen = () => {
   const { entries, isLoading } = useEntries();
@@ -60,9 +60,9 @@ const SearchScreen = () => {
         />
       </View>
 
-      <Text style={styles.recentTitle}>
+      <ThemedText style={styles.recentTitle}>
         {searchQuery.trim() ? "Search Results" : "Recent Entries"}
-      </Text>
+      </ThemedText>
 
       <FlatList
         data={filteredEntries}
@@ -79,14 +79,18 @@ const SearchScreen = () => {
               />
             </View>
             <View>
-              <Text style={styles.recentItemTitle}>{item.title}</Text>
-              <Text style={styles.recentItemDate}>{item.date}</Text>
+              <ThemedText style={styles.recentItemTitle}>
+                {item.title}
+              </ThemedText>
+              <ThemedText style={styles.recentItemDate}>{item.date}</ThemedText>
             </View>
           </TouchableOpacity>
         )}
         ListEmptyComponent={() => (
           <View style={styles.noResultsContainer}>
-            <Text style={styles.noResultsText}>No entries found.</Text>
+            <ThemedText style={styles.noResultsText}>
+              No entries found.
+            </ThemedText>
           </View>
         )}
       />

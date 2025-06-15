@@ -2,7 +2,6 @@
 import React from "react";
 import {
   View,
-  Text,
   StyleSheet,
   Dimensions,
   Animated,
@@ -13,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Entry } from "../types";
 import { useEntries } from "@/context/EntryContext";
 import { useTheme } from "../context/ThemeContext";
+import ThemedText from "./ThemedText";
 const { width } = Dimensions.get("window");
 
 export const ITEM_HEIGHT = 350;
@@ -64,7 +64,12 @@ const TimelineEntryCard = ({
   const { colors } = useTheme();
   const styles = stylesheet(colors);
   return (
-    <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
+    <Animated.View
+      style={[
+        styles.card,
+        { backgroundColor: colors.background, transform: [{ scale }] },
+      ]}
+    >
       <Animated.View
         style={[styles.deleteButton, { opacity: deleteButtonOpacity }]}
       >
@@ -78,9 +83,9 @@ const TimelineEntryCard = ({
       >
         <Ionicons name={entry.icon} size={40} color="white" />
       </View>
-      <Text style={styles.title}>{entry.title}</Text>
-      <Text style={styles.time}>{entry.time}</Text>
-      <Text style={styles.content}>{entry.content}</Text>
+      <ThemedText style={styles.title}>{entry.title}</ThemedText>
+      <ThemedText style={styles.time}>{entry.time}</ThemedText>
+      <ThemedText style={styles.content}>{entry.content}</ThemedText>
     </Animated.View>
   );
 };

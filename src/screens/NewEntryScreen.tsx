@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -17,6 +16,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import { useEntries } from "@/context/EntryContext";
+import ThemedText from "@/components/ThemedText";
 
 const NewEntryScreen = () => {
   const navigation = useNavigation();
@@ -83,7 +83,7 @@ const NewEntryScreen = () => {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="close" size={30} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>New Entry</Text>
+          <ThemedText style={styles.headerTitle}>New Entry</ThemedText>
           <View style={{ width: 30 }} />
         </View>
 
@@ -121,26 +121,26 @@ const NewEntryScreen = () => {
             onPress={handlePickImage}
           >
             <Ionicons name="camera-outline" size={24} color={colors.text} />
-            <Text style={styles.actionText}>Photo</Text>
+            <ThemedText style={styles.actionText}>Photo</ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionButton}
             onPress={showNotImplementedAlert}
           >
             <Ionicons name="videocam-outline" size={24} color={colors.text} />
-            <Text style={styles.actionText}>Video</Text>
+            <ThemedText style={styles.actionText}>Video</ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionButton}
             onPress={showNotImplementedAlert}
           >
             <Ionicons name="location-outline" size={24} color={colors.text} />
-            <Text style={styles.actionText}>Location</Text>
+            <ThemedText style={styles.actionText}>Location</ThemedText>
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>Save</Text>
+          <ThemedText style={styles.saveButtonText}>Save</ThemedText>
         </TouchableOpacity>
       </KeyboardAvoidingView>
     </SafeAreaView>

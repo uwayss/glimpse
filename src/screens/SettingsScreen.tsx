@@ -2,7 +2,6 @@
 import React from "react";
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
@@ -16,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useProfile } from "@/context/ProfileContext";
 import { RootStackNavigationProp } from "@/types";
 import { useTheme } from "@/context/ThemeContext"; // Use theme
+import ThemedText from "@/components/ThemedText";
 
 const SettingsItem = ({
   icon,
@@ -35,7 +35,9 @@ const SettingsItem = ({
         >
           <Ionicons name={icon} size={20} color={colors.primary} />
         </View>
-        <Text style={[styles.itemText, { color: colors.text }]}>{name}</Text>
+        <ThemedText style={[styles.itemText, { color: colors.text }]}>
+          {name}
+        </ThemedText>
       </View>
       <Ionicons
         name="chevron-forward-outline"
@@ -76,7 +78,7 @@ const SettingsScreen = () => {
     <ScrollView style={[styles.container, { backgroundColor: colors.card }]}>
       <SafeAreaView>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
+          <ThemedText style={styles.sectionTitle}>Account</ThemedText>
           <View style={[styles.card, { backgroundColor: colors.background }]}>
             <TouchableOpacity
               style={styles.userItem}
@@ -104,7 +106,7 @@ const SettingsScreen = () => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
+          <ThemedText style={styles.sectionTitle}>Preferences</ThemedText>
           <View style={[styles.card, { backgroundColor: colors.background }]}>
             <SettingsItem
               icon="notifications-outline"
@@ -126,7 +128,7 @@ const SettingsScreen = () => {
           style={[styles.logoutButton, { backgroundColor: colors.background }]}
           onPress={handleLogout}
         >
-          <Text style={styles.logoutText}>Log Out & Reset App</Text>
+          <ThemedText style={styles.logoutText}>Log Out & Reset App</ThemedText>
         </TouchableOpacity>
       </SafeAreaView>
     </ScrollView>
