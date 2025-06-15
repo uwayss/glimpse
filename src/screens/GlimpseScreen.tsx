@@ -1,89 +1,95 @@
 // src/screens/GlimpseScreen.tsx
-import React from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
   StyleSheet,
   SectionList,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../constants/Colors";
 import EntryCard from "../components/EntryCard";
-import { DayEntries, RootStackNavigationProp } from "../types"; // Import the helper type
+import { DayEntries, RootStackNavigationProp, Entry } from "../types";
+import { useEntries } from "@/context/EntryContext";
 
-// Updated dummy data with icons
-const DUMMY_ENTRIES: DayEntries[] = [
-  {
-    title: "Today",
-    data: [
-      {
-        id: "1",
-        time: "10:00 AM",
-        title: "Morning walk",
-        content:
-          "Enjoyed a peaceful walk in the park, feeling refreshed and energized.",
-        icon: "walk-outline",
-        iconColor: "#AEEA7C",
-      },
-      {
-        id: "2",
-        time: "1:00 PM",
-        title: "Lunch with friends",
-        content:
-          "Had a great time catching up with friends over lunch at a cozy cafe.",
-        icon: "restaurant-outline",
-        iconColor: "#FFD166",
-      },
-      {
-        id: "3",
-        time: "6:00 PM",
-        title: "Evening yoga",
-        content:
-          "Relaxing yoga session to unwind after a busy day, feeling calm and centered.",
-        icon: "body-outline",
-        iconColor: "#89CFF0",
-      },
-    ],
-  },
-  {
-    title: "Yesterday",
-    data: [
-      {
-        id: "4",
-        time: "9:00 AM",
-        title: "Coffee at home",
-        content:
-          "Started the day with a quiet moment enjoying a cup of coffee at home.",
-        icon: "cafe-outline",
-        iconColor: "#C9A98F",
-      },
-      {
-        id: "5",
-        time: "2:00 PM",
-        title: "Work meeting",
-        content:
-          "Productive meeting with the team to discuss project updates and next steps.",
-        icon: "people-outline",
-        iconColor: "#B19CD9",
-      },
-      {
-        id: "6",
-        time: "7:00 PM",
-        title: "Dinner with family",
-        content:
-          "Spent quality time with family over a delicious home-cooked dinner.",
-        icon: "home-outline",
-        iconColor: "#FFB3BA",
-      },
-    ],
-  },
-];
+// A helper function to group entries by date
+const groupEntriesByDate = (entries: Entry[]): DayEntries[] => {
+  if (!entries.length) return [];
+
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const todayStr = today.toISOString().split("T")[0];
+  const yesterdayStr = yesterday.toISOString().split("T")[0];
+
+  const grouped = entries.reduce((acc, entry) => {
+    const entryDate = entry.date || "Unknown";
+    // Initialize the array if it doesn't exist
+    if (!acc[entryDate]) {
+      acc[entryDate] = [];
+    }
+    acc[entryDate].push(entry);
+    return acc;
+  }, {} as Record<string, Entry[]>);
+
+  // Convert the grouped object into an array for SectionList
+  return Object.keys(grouped)
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()) // Sort by most recent date first
+    .map((date) => {
+      let title = date; // Default title is the date string
+      if (date === todayStr) title = "Today";
+      if (date === yesterdayStr) title = "Yesterday";
+      return { title, data: grouped[date] };
+    });
+};
 
 const GlimpseScreen = () => {
   const navigation = useNavigation<RootStackNavigationProp>();
+  // Get live data and the loading state from our context
+  const { entries, isLoading } = useEntries();
+
+  // Memoize the grouped data so it only recalculates when entries change
+  const sectionedData = useMemo(() => groupEntriesByDate(entries), [entries]);
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <View style={styles.emptyContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      );
+    }
+
+    if (sectionedData.length > 0) {
+      return (
+        <SectionList
+          sections={sectionedData}
+          keyExtractor={(item, index) => item.id + index}
+          renderItem={({ item }) => <EntryCard entry={item} />}
+          renderSectionHeader={({ section: { title } }) => (
+            <Text style={styles.sectionHeader}>{title}</Text>
+          )}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      );
+    }
+
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>No entries yet.</Text>
+        <Text style={styles.emptySubText}>
+          Tap the &apos;+&apos; to add your first glimpse!
+        </Text>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -92,21 +98,11 @@ const GlimpseScreen = () => {
           <Ionicons name="add" size={32} color={Colors.text} />
         </TouchableOpacity>
       </View>
-      <SectionList
-        sections={DUMMY_ENTRIES}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <EntryCard entry={item} />}
-        renderSectionHeader={({ section: { title } }) => (
-          <Text style={styles.sectionHeader}>{title}</Text>
-        )}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
+      {renderContent()}
     </SafeAreaView>
   );
 };
 
-// Styles remain the same
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -133,6 +129,22 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginTop: 20,
     marginBottom: 10,
+    backgroundColor: Colors.background,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: Colors.text,
+  },
+  emptySubText: {
+    fontSize: 16,
+    color: Colors.lightText,
+    marginTop: 10,
   },
 });
 

@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Animated,
   ScrollView,
+  Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar, DateData } from "react-native-calendars";
@@ -16,26 +18,62 @@ import TimelineEntryCard, {
   SNAP_INTERVAL,
 } from "../components/TimelineEntryCard";
 import EntryCard from "../components/EntryCard";
-import { DUMMY_ENTRIES } from "../mock/pastEntryScreen";
+// --- CHANGE 1: Import the context hook to get real data ---
+import { useEntries } from "@/context/EntryContext";
 
-const FLATTENED_DATA = DUMMY_ENTRIES.flatMap((day) => day.data);
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const PastEntriesScreen = () => {
+  // --- CHANGE 2: Get live entries and loading state from context ---
+  const { entries, isLoading } = useEntries();
   const [activeView, setActiveView] = useState<"calendar" | "timeline">(
     "calendar"
   );
-  const [selectedDate, setSelectedDate] = useState("2024-01-05");
+  // Default selected date to today or the latest entry's date
+  const [selectedDate, setSelectedDate] = useState<string>(
+    entries[0]?.date || new Date().toISOString().split("T")[0]
+  );
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const entriesForSelectedDate = useMemo(() => {
-    return FLATTENED_DATA.filter((entry) => entry.date === selectedDate);
-  }, [selectedDate]);
+  // --- CHANGE 3: The spacer logic for correct centering. This is the standard way. ---
+  const SPACER_ITEM_SIZE = (SCREEN_HEIGHT - SNAP_INTERVAL) / 2;
+  const TIMELINE_WITH_SPACERS = useMemo(
+    () => [{ id: "spacer-start" }, ...entries, { id: "spacer-end" }],
+    [entries]
+  );
 
+  // This logic now works on the live 'entries' data
+  const entriesForSelectedDate = useMemo(() => {
+    return entries.filter((entry) => entry.date === selectedDate);
+  }, [selectedDate, entries]);
+
+  // This logic now works on the live 'entries' data
   const markedDates = useMemo(() => {
-    return {
-      [selectedDate]: { selected: true, selectedColor: Colors.primary },
-    };
-  }, [selectedDate]);
+    // Mark all dates that have entries
+    const marks: {
+      [key: string]: {
+        marked?: boolean;
+        dotColor?: string;
+        selected?: boolean;
+        selectedColor?: string;
+      };
+    } = entries.reduce((acc, entry: Entry) => {
+      if (entry.date) {
+        acc[entry.date] = { marked: true, dotColor: Colors.primary };
+      }
+      return acc;
+    }, {} as { [key: string]: { marked: boolean; dotColor: string; selected?: boolean; selectedColor?: string } });
+
+    // Highlight the currently selected date
+    if (marks[selectedDate]) {
+      marks[selectedDate].selected = true;
+      marks[selectedDate].selectedColor = Colors.primary;
+    } else {
+      marks[selectedDate] = { selected: true, selectedColor: Colors.primary };
+    }
+
+    return marks;
+  }, [selectedDate, entries]);
 
   function SwitcherButton({
     text,
@@ -58,31 +96,25 @@ const PastEntriesScreen = () => {
     );
   }
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Past Entries</Text>
-      </View>
-
-      <View style={styles.switcherContainer}>
-        <SwitcherButton
-          text="Calendar"
-          onPress={() => setActiveView("calendar")}
-          isActive={activeView === "calendar"}
-        />
-        <SwitcherButton
-          text="Timeline"
-          onPress={() => setActiveView("timeline")}
-          isActive={activeView === "timeline"}
-        />
-      </View>
-
-      {activeView === "calendar" ? (
+  // A helper to render the main content based on loading state
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      );
+    }
+    // --- Now we render the actual views ---
+    if (activeView === "calendar") {
+      return (
         <View style={styles.contentContainer}>
           <ScrollView showsVerticalScrollIndicator={false}>
             <Calendar
               current={selectedDate}
-              onDayPress={(day: DateData) => setSelectedDate(day.dateString)}
+              onDayPress={(day: DateData) =>
+                setSelectedDate(day.dateString as string)
+              }
               markedDates={markedDates}
               theme={{
                 backgroundColor: Colors.background,
@@ -119,28 +151,55 @@ const PastEntriesScreen = () => {
             </View>
           </ScrollView>
         </View>
-      ) : (
-        <Animated.FlatList
-          data={FLATTENED_DATA}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          snapToInterval={SNAP_INTERVAL}
-          contentContainerStyle={{
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-          decelerationRate="fast"
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true }
-          )}
-          renderItem={({ item, index }) => {
-            return (
-              <TimelineEntryCard entry={item} index={index} scrollY={scrollY} />
-            );
-          }}
+      );
+    }
+    // Timeline View
+    return (
+      <Animated.FlatList
+        data={TIMELINE_WITH_SPACERS} // Use spacer data
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        snapToInterval={SNAP_INTERVAL} // Use correct snap interval
+        decelerationRate="fast"
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        renderItem={({ item, index }) => {
+          // --- CHANGE 4: This renders the spacers and fixes the centering ---
+          if (!("title" in item)) {
+            return <View style={{ height: SPACER_ITEM_SIZE }} />;
+          }
+          return (
+            <TimelineEntryCard
+              entry={item}
+              index={index - 1}
+              scrollY={scrollY}
+            />
+          );
+        }}
+      />
+    );
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Past Entries</Text>
+      </View>
+      <View style={styles.switcherContainer}>
+        <SwitcherButton
+          text="Calendar"
+          onPress={() => setActiveView("calendar")}
+          isActive={activeView === "calendar"}
         />
-      )}
+        <SwitcherButton
+          text="Timeline"
+          onPress={() => setActiveView("timeline")}
+          isActive={activeView === "timeline"}
+        />
+      </View>
+      {renderContent()}
     </SafeAreaView>
   );
 };
@@ -152,6 +211,11 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   header: {
     paddingHorizontal: 20,

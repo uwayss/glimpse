@@ -1,7 +1,8 @@
-// navigation/BottomTabNavigator.tsx
+// src/navigation/BottomTabNavigator.tsx
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons, Feather } from "@expo/vector-icons";
+import { StackNavigationProp } from "@react-navigation/stack";
 
 import GlimpseScreen from "../screens/GlimpseScreen";
 import PastEntriesScreen from "../screens/PastEntriesScreen";
@@ -9,9 +10,12 @@ import ProfileScreen from "../screens/ProfileScreen";
 import SearchScreen from "../screens/SearchScreen";
 import Colors from "../constants/Colors";
 import NewEntryScreen from "../screens/NewEntryScreen";
-import { BottomTabParamList, RootBottomTabNavigationProp } from "../types";
+import { BottomTabParamList, RootStackParamList } from "../types";
+
+// We DO NOT need the complex CompositeNavigationProp type. This is much cleaner.
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();
+
 const BottomTabNavigator = () => {
   return (
     <Tab.Navigator
@@ -43,20 +47,26 @@ const BottomTabNavigator = () => {
       />
       <Tab.Screen
         name="NewEntryTab"
-        component={NewEntryScreen} // This is just a placeholder, the real action is in the listener
+        component={NewEntryScreen} // Placeholder component
         options={{
           tabBarIcon: ({ color, size }) => (
             <Feather name="plus-square" color={color} size={size + 4} />
           ),
         }}
-        listeners={({
-          navigation,
-        }: {
-          navigation: RootBottomTabNavigationProp;
-        }) => ({
+        // --- THIS IS THE FIX ---
+        listeners={({ navigation }) => ({
           tabPress: (e) => {
+            // Prevent the default action (which is switching to this tab)
             e.preventDefault();
-            navigation.navigate("NewEntryTab");
+
+            // Get the parent navigator and tell it which type it is
+            const parentNavigator =
+              navigation.getParent<StackNavigationProp<RootStackParamList>>();
+
+            // If the parent exists, tell it to navigate to the 'NewEntry' modal
+            if (parentNavigator) {
+              parentNavigator.navigate("NewEntry");
+            }
           },
         })}
       />
