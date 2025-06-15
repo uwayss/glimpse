@@ -8,13 +8,13 @@ import { StackNavigationProp } from "@react-navigation/stack";
 // --- Existing Types ---
 export type Entry = {
   id: string;
-  time: string;
-  title: string;
-  content: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  iconColor: string;
+  date?: string; // <-- ADD THIS LINE (format: 'YYYY-MM-DD')
+  time?: string;
+  title?: string;
+  content?: string;
+  icon?: keyof typeof Ionicons.glyphMap;
+  iconColor?: string;
 };
-
 export type DayEntries = {
   title: string;
   data: Entry[];
