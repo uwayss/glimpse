@@ -6,84 +6,19 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
-  Dimensions,
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar, DateData } from "react-native-calendars";
 import Colors from "../constants/Colors";
-import { DayEntries, Entry } from "../types";
+import { Entry } from "../types";
 import TimelineEntryCard, {
-  ITEM_HEIGHT,
+  SNAP_INTERVAL,
 } from "../components/TimelineEntryCard";
 import EntryCard from "../components/EntryCard";
+import { DUMMY_ENTRIES } from "../mock/pastEntryScreen";
 
-// Dummy data remains the same
-const DUMMY_ENTRIES: DayEntries[] = [
-  {
-    title: "2024-01-05",
-    data: [
-      {
-        id: "1",
-        date: "2024-01-05",
-        time: "10:00 AM",
-        title: "Morning walk",
-        content:
-          "Enjoyed a peaceful walk in the park, feeling refreshed and energized.",
-        icon: "walk-outline",
-        iconColor: "#AEEA7C",
-      },
-      {
-        id: "2",
-        date: "2024-01-05",
-        time: "1:00 PM",
-        title: "Lunch with friends",
-        content:
-          "Had a great time catching up with friends over lunch at a cozy cafe.",
-        icon: "restaurant-outline",
-        iconColor: "#FFD166",
-      },
-    ],
-  },
-  {
-    title: "2024-01-04",
-    data: [
-      {
-        id: "4",
-        date: "2024-01-04",
-        time: "9:00 AM",
-        title: "Coffee at home",
-        content:
-          "Started the day with a quiet moment enjoying a cup of coffee at home.",
-        icon: "cafe-outline",
-        iconColor: "#C9A98F",
-      },
-      {
-        id: "5",
-        date: "2024-01-04",
-        time: "2:00 PM",
-        title: "Work meeting",
-        content:
-          "Productive meeting with the team to discuss project updates and next steps.",
-        icon: "people-outline",
-        iconColor: "#B19CD9",
-      },
-    ],
-  },
-];
-
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const FLATTENED_DATA = DUMMY_ENTRIES.flatMap((day) => day.data);
-
-// --- POINT 1: SPACER VIEW for correct centering ---
-const SPACER_ITEM_SIZE = (SCREEN_HEIGHT - ITEM_HEIGHT) / 2;
-
-// Add spacer items to the beginning and end of our data array
-const TIMELINE_WITH_SPACERS = [
-  { id: "spacer-start" }, // Start spacer
-  ...FLATTENED_DATA,
-  { id: "spacer-end" }, // End spacer
-];
 
 const PastEntriesScreen = () => {
   const [activeView, setActiveView] = useState<"calendar" | "timeline">(
@@ -102,6 +37,27 @@ const PastEntriesScreen = () => {
     };
   }, [selectedDate]);
 
+  function SwitcherButton({
+    text,
+    onPress,
+    isActive,
+  }: {
+    text: string;
+    onPress: () => void;
+    isActive: boolean;
+  }) {
+    return (
+      <TouchableOpacity
+        style={[styles.switcherButton, isActive && styles.activeButton]}
+        onPress={onPress}
+      >
+        <Text style={[styles.switcherText, isActive && styles.activeText]}>
+          {text}
+        </Text>
+      </TouchableOpacity>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -109,49 +65,41 @@ const PastEntriesScreen = () => {
       </View>
 
       <View style={styles.switcherContainer}>
-        <TouchableOpacity
-          style={[
-            styles.switcherButton,
-            activeView === "calendar" && styles.activeButton,
-          ]}
+        <SwitcherButton
+          text="Calendar"
           onPress={() => setActiveView("calendar")}
-        >
-          <Text
-            style={[
-              styles.switcherText,
-              activeView === "calendar" && styles.activeText,
-            ]}
-          >
-            Calendar
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.switcherButton,
-            activeView === "timeline" && styles.activeButton,
-          ]}
+          isActive={activeView === "calendar"}
+        />
+        <SwitcherButton
+          text="Timeline"
           onPress={() => setActiveView("timeline")}
-        >
-          <Text
-            style={[
-              styles.switcherText,
-              activeView === "timeline" && styles.activeText,
-            ]}
-          >
-            Timeline
-          </Text>
-        </TouchableOpacity>
+          isActive={activeView === "timeline"}
+        />
       </View>
 
       {activeView === "calendar" ? (
-        // --- POINT 2: Your updated scrollable layout for Calendar view ---
         <View style={styles.contentContainer}>
           <ScrollView showsVerticalScrollIndicator={false}>
             <Calendar
               current={selectedDate}
               onDayPress={(day: DateData) => setSelectedDate(day.dateString)}
               markedDates={markedDates}
-              theme={calendarTheme}
+              theme={{
+                backgroundColor: Colors.background,
+                calendarBackground: Colors.background,
+                textSectionTitleColor: Colors.lightText,
+                todayTextColor: Colors.primary,
+                dayTextColor: Colors.text,
+                textDisabledColor: Colors.border,
+                arrowColor: Colors.primary,
+                monthTextColor: Colors.text,
+                textDayFontWeight: "300",
+                textMonthFontWeight: "bold",
+                textDayHeaderFontWeight: "300",
+                textDayFontSize: 16,
+                textMonthFontSize: 16,
+                textDayHeaderFontSize: 14,
+              }}
             />
             <View style={styles.entriesListContainer}>
               <Text style={styles.entriesListTitle}>
@@ -173,37 +121,28 @@ const PastEntriesScreen = () => {
         </View>
       ) : (
         <Animated.FlatList
-          data={TIMELINE_WITH_SPACERS} // Use the data with spacers
+          data={FLATTENED_DATA}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          snapToInterval={ITEM_HEIGHT}
+          snapToInterval={SNAP_INTERVAL}
+          contentContainerStyle={{
+            justifyContent: "center",
+            alignItems: "center",
+          }}
           decelerationRate="fast"
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
             { useNativeDriver: true }
           )}
           renderItem={({ item, index }) => {
-            // Render the spacers as empty views and the cards normally
-            if (!("title" in item)) {
-              return <View style={{ height: SPACER_ITEM_SIZE }} />;
-            }
-            // We subtract 1 from the index because of the start spacer
             return (
-              <TimelineEntryCard
-                entry={item}
-                index={index - 1}
-                scrollY={scrollY}
-              />
+              <TimelineEntryCard entry={item} index={index} scrollY={scrollY} />
             );
           }}
         />
       )}
     </SafeAreaView>
   );
-};
-
-const calendarTheme = {
-  // ... (calendar theme styles remain the same)
 };
 
 const styles = StyleSheet.create({
@@ -237,28 +176,23 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",
+    margin: 3,
   },
   activeButton: {
     backgroundColor: Colors.background,
-    margin: 3,
   },
-  // --- POINT 3: Fixed switcher text styles ---
   switcherText: {
     fontSize: 16,
-    fontWeight: "500", // Use a consistent font weight for both states
+    fontWeight: "500",
     color: Colors.lightText,
   },
   activeText: {
-    color: Colors.primary, // Only the color changes
+    color: Colors.primary,
   },
-  // Timeline styles
-  // No longer need contentContainerStyle for the FlatList
-
-  // Styles for the list below the calendar
   entriesListContainer: {
     paddingHorizontal: 20,
     marginTop: 20,
-    paddingBottom: 20, // Add some padding at the bottom
+    paddingBottom: 20,
   },
   entriesListTitle: {
     fontSize: 18,
@@ -266,7 +200,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   noEntriesContainer: {
-    height: 100, // Give it a fixed height
+    height: 100,
     justifyContent: "center",
     alignItems: "center",
   },

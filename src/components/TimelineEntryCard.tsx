@@ -6,54 +6,49 @@ import Colors from "../constants/Colors";
 import { Entry } from "../types";
 
 const { width } = Dimensions.get("window");
-// INCREASED a bit for a more prominent look
-export const ITEM_WIDTH = width * 0.8;
-// INCREASED height to match new width with a nice aspect ratio
-export const ITEM_HEIGHT = ITEM_WIDTH * 1.3;
+
+export const ITEM_HEIGHT = 350;
+export const ITEM_WIDTH = width * 0.9;
+export const VERTICAL_MARGIN = 5;
+export const SNAP_INTERVAL = ITEM_HEIGHT + VERTICAL_MARGIN;
 
 type TimelineEntryCardProps = {
   entry: Entry;
-  index: number;
   scrollY: Animated.Value;
+  index: number;
 };
 
 const TimelineEntryCard = ({
   entry,
-  index,
   scrollY,
+  index,
 }: TimelineEntryCardProps) => {
   const inputRange = [
-    (index - 1) * ITEM_HEIGHT,
-    index * ITEM_HEIGHT,
-    (index + 1) * ITEM_HEIGHT,
+    (index - 1) * SNAP_INTERVAL,
+    index * SNAP_INTERVAL,
+    (index + 1) * SNAP_INTERVAL,
   ];
 
-  // Make the non-focused cards slightly smaller for a more pronounced effect
   const scale = scrollY.interpolate({
     inputRange,
-    outputRange: [0.8, 1, 0.8],
+    outputRange: [0.85, 1, 0.85],
     extrapolate: "clamp",
   });
-  if (entry.id === "spacer-start" || entry.id === "spacer-end") {
-    return null;
-  }
+
   return (
     <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
       <View
         style={[styles.iconContainer, { backgroundColor: entry.iconColor }]}
       >
-        <Ionicons name={entry.icon} size={60} color="white" />
+        <Ionicons name={entry.icon} size={40} color="white" />
       </View>
       <Text style={styles.title}>{entry.title}</Text>
       <Text style={styles.time}>{entry.time}</Text>
-      <Text style={styles.content} numberOfLines={4}>
-        {entry.content}
-      </Text>
+      <Text style={styles.content}>{entry.content}</Text>
     </Animated.View>
   );
 };
 
-// ... (styles remain the same)
 const styles = StyleSheet.create({
   card: {
     width: ITEM_WIDTH,
@@ -61,31 +56,32 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     borderRadius: 20,
     padding: 20,
-    marginVertical: 10,
+    marginVertical: VERTICAL_MARGIN,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.1,
-    shadowRadius: 15,
-    elevation: 8,
+    shadowRadius: 10,
+    elevation: 6,
   },
   iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "bold",
     color: Colors.text,
-    marginBottom: 8,
+    marginBottom: 25,
+    textAlign: "center",
   },
   time: {
-    fontSize: 14,
+    fontSize: 16,
     color: Colors.lightText,
     marginBottom: 15,
   },
