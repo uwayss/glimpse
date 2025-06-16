@@ -1,21 +1,11 @@
-// src/screens/ViewEntryScreen.tsx
-import React, { useLayoutEffect, useCallback } from "react";
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Image,
-  Dimensions,
-  TouchableOpacity,
-  Alert,
-} from "react-native";
+import React from "react";
+import { View, StyleSheet, ScrollView, Image, Dimensions } from "react-native";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useEntries } from "@/context/EntryContext";
-import { useTheme } from "@/context/ThemeContext";
-import ThemedText from "@/components/ThemedText";
+import { useAppTheme } from "@/context/ThemeContext";
 import { RootStackParamList, RootStackNavigationProp } from "@/types";
-import { Ionicons } from "@expo/vector-icons";
+import { Appbar, Text, Chip, Portal, Dialog, Button } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type ViewEntryScreenRouteProp = RouteProp<RootStackParamList, "ViewEntry">;
 const { width } = Dimensions.get("window");
@@ -24,88 +14,96 @@ const ViewEntryScreen = () => {
   const navigation = useNavigation<RootStackNavigationProp>();
   const route = useRoute<ViewEntryScreenRouteProp>();
   const { entryId } = route.params;
+  const [dialogVisible, setDialogVisible] = React.useState(false);
 
   const { entries, deleteEntry } = useEntries();
-  const { colors } = useTheme();
-
+  const theme = useAppTheme();
   const entry = entries.find((e) => e.id === entryId);
 
-  const handleDelete = useCallback(() => {
-    Alert.alert(
-      "Delete Entry",
-      "Are you sure you want to permanently delete this entry?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            if (entry) {
-              deleteEntry(entry.id);
-              navigation.goBack();
-            }
-          },
-        },
-      ]
-    );
-  }, [entry, deleteEntry, navigation]);
+  const showDeleteDialog = () => setDialogVisible(true);
+  const hideDeleteDialog = () => setDialogVisible(false);
 
-  useLayoutEffect(() => {
+  const handleDelete = () => {
+    hideDeleteDialog();
     if (entry) {
-      navigation.setOptions({
-        headerTitle: entry.title || "Entry",
-        headerRight: () => (
-          <TouchableOpacity onPress={handleDelete} style={{ marginRight: 15 }}>
-            <Ionicons name="trash-outline" size={24} color={colors.text} />
-          </TouchableOpacity>
-        ),
-      });
+      deleteEntry(entry.id);
+      navigation.goBack();
     }
-  }, [navigation, entry, colors, handleDelete]);
+  };
 
   if (!entry) {
     return (
       <SafeAreaView
-        style={[styles.container, { backgroundColor: colors.background }]}
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
       >
+        <Appbar.Header>
+          <Appbar.BackAction onPress={() => navigation.goBack()} />
+          <Appbar.Content title="Not Found" />
+        </Appbar.Header>
         <View style={styles.centered}>
-          <ThemedText>Entry not found.</ThemedText>
+          <Text>Entry not found.</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
-      {entry.imageUri && (
-        <Image
-          source={{ uri: entry.imageUri }}
-          style={styles.image}
-          resizeMode="contain"
-        />
-      )}
-      <View style={styles.contentContainer}>
-        <ThemedText style={styles.title}>{entry.title}</ThemedText>
-        <View style={styles.metaContainer}>
-          <ThemedText style={styles.metaText}>{entry.date}</ThemedText>
-          <ThemedText style={styles.metaText}>•</ThemedText>
-          <ThemedText style={styles.metaText}>{entry.time}</ThemedText>
-        </View>
+    <>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+        edges={["top"]}
+      >
+        <Appbar.Header style={{ backgroundColor: theme.colors.background }}>
+          <Appbar.BackAction onPress={() => navigation.goBack()} />
+          <Appbar.Content title={entry.title || "Entry"} />
+          <Appbar.Action icon="trash-can-outline" onPress={showDeleteDialog} />
+        </Appbar.Header>
+        <ScrollView>
+          {entry.imageUri && (
+            <Image source={{ uri: entry.imageUri }} style={styles.image} />
+          )}
+          <View style={styles.contentContainer}>
+            <Text variant="headlineLarge" style={styles.title}>
+              {entry.title}
+            </Text>
+            <View style={styles.metaContainer}>
+              <Text
+                variant="bodyMedium"
+                style={{ color: theme.colors.tertiary }}
+              >
+                {entry.date} • {entry.time}
+              </Text>
+            </View>
 
-        {entry.location && (
-          <View style={[styles.chip, { borderColor: colors.primary + "30" }]}>
-            <Ionicons name="location-sharp" size={14} color={colors.primary} />
-            <ThemedText style={[styles.chipText, { color: colors.primary }]}>
-              {entry.location}
-            </ThemedText>
+            {entry.location && (
+              <Chip icon="map-marker" style={styles.chip}>
+                {entry.location}
+              </Chip>
+            )}
+
+            <Text variant="bodyLarge" style={styles.content}>
+              {entry.content}
+            </Text>
           </View>
-        )}
-
-        <ThemedText style={styles.content}>{entry.content}</ThemedText>
-      </View>
-    </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
+      <Portal>
+        <Dialog visible={dialogVisible} onDismiss={hideDeleteDialog}>
+          <Dialog.Title>Delete Entry</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">
+              Are you sure you want to permanently delete this entry?
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={hideDeleteDialog}>Cancel</Button>
+            <Button onPress={handleDelete} textColor={theme.colors.error}>
+              Delete
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+    </>
   );
 };
 
@@ -120,44 +118,23 @@ const styles = StyleSheet.create({
   },
   image: {
     width: width,
-    height: width,
-    backgroundColor: "#000",
+    height: width * 0.75,
   },
   contentContainer: {
     padding: 20,
   },
   title: {
-    fontSize: 28,
     fontWeight: "bold",
     marginBottom: 8,
   },
   metaContainer: {
-    flexDirection: "row",
-    alignItems: "center",
     marginBottom: 20,
-    opacity: 0.6,
-  },
-  metaText: {
-    fontSize: 14,
-    marginRight: 8,
   },
   chip: {
-    flexDirection: "row",
-    alignItems: "center",
     alignSelf: "flex-start",
-    paddingVertical: 5,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    borderWidth: 1,
     marginBottom: 20,
   },
-  chipText: {
-    marginLeft: 5,
-    fontSize: 12,
-    fontWeight: "500",
-  },
   content: {
-    fontSize: 17,
     lineHeight: 28,
   },
 });

@@ -1,4 +1,3 @@
-// src/navigation/AppNavigator.tsx
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import { NavigationContainer } from "@react-navigation/native";
@@ -13,33 +12,31 @@ import EditProfileScreen from "../screens/EditProfileScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 import OnboardingScreen from "../screens/OnboardingScreen";
 import ViewEntryScreen from "../screens/ViewEntryScreen";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => {
-  const { colors } = useTheme();
+  const { navigationTheme, theme } = useTheme();
   const { profile, isLoading } = useProfile();
 
   if (isLoading) {
-    const styles = stylesheet(colors);
+    const styles = stylesheet(theme.colors);
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navigationTheme}>
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
-            backgroundColor: colors.background,
-            shadowOpacity: 0,
-            elevation: 0,
+            backgroundColor: theme.colors.surface,
           },
-          headerTintColor: colors.text,
         }}
       >
         {profile?.hasOnboarded ? (
@@ -66,6 +63,7 @@ const AppNavigator = () => {
               options={{
                 title: "Edit Profile",
                 presentation: "modal",
+                headerShown: false,
               }}
             />
             <Stack.Screen
@@ -79,9 +77,7 @@ const AppNavigator = () => {
               name="ViewEntry"
               component={ViewEntryScreen}
               options={{
-                title: "",
                 headerShown: false,
-                presentation: "modal",
               }}
             />
           </>

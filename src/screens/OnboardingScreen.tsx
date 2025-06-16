@@ -1,22 +1,19 @@
-// src/screens/OnboardingScreen.tsx
 import React, { useState } from "react";
 import {
   View,
-  TextInput,
   StyleSheet,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppTheme } from "@/context/ThemeContext";
 import { useProfile } from "@/context/ProfileContext";
-import ThemedText from "@/components/ThemedText";
+import { Text, TextInput, Button } from "react-native-paper";
 
 const OnboardingScreen = () => {
-  const { colors } = useTheme();
+  const theme = useAppTheme();
   const { updateProfile } = useProfile();
   const [name, setName] = useState("");
 
@@ -24,15 +21,13 @@ const OnboardingScreen = () => {
     if (name.trim().length > 0) {
       updateProfile({ name: name.trim(), hasOnboarded: true });
     } else {
-      // Even if they don't enter a name, we mark onboarding as complete
-      // and they can edit it later.
       updateProfile({ hasOnboarded: true });
     }
   };
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -43,36 +38,35 @@ const OnboardingScreen = () => {
             <Ionicons
               name="sparkles-outline"
               size={80}
-              color={colors.primary}
+              color={theme.colors.primary}
             />
-            <ThemedText style={styles.title}>Welcome to Glimpse</ThemedText>
-            <ThemedText style={styles.subtitle}>
+            <Text variant="headlineLarge" style={styles.title}>
+              Welcome to Glimpse
+            </Text>
+            <Text
+              variant="bodyLarge"
+              style={[styles.subtitle, { color: theme.colors.tertiary }]}
+            >
               Let&apos;s start by getting your name. This is stored only on your
               device.
-            </ThemedText>
+            </Text>
             <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.card,
-                  color: colors.text,
-                  borderColor: colors.border,
-                },
-              ]}
-              placeholder="What should we call you?"
-              placeholderTextColor={colors.lightText}
+              label="What should we call you?"
               value={name}
               onChangeText={setName}
+              mode="outlined"
+              style={styles.input}
             />
           </View>
         </ScrollView>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: colors.primary }]}
+          <Button
+            mode="contained"
             onPress={handleContinue}
+            contentStyle={styles.button}
           >
-            <ThemedText style={styles.buttonText}>Continue</ThemedText>
-          </TouchableOpacity>
+            Continue
+          </Button>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -96,39 +90,25 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: 32,
     fontWeight: "bold",
     marginTop: 20,
     textAlign: "center",
   },
   subtitle: {
-    fontSize: 16,
     textAlign: "center",
     marginTop: 10,
     marginBottom: 40,
-    color: "#8E8E93",
     maxWidth: "85%",
   },
   input: {
     width: "100%",
-    padding: 15,
-    borderRadius: 10,
-    fontSize: 16,
-    borderWidth: 1,
   },
   buttonContainer: {
     padding: 20,
-    paddingBottom: 40, // Extra padding for home bar
+    paddingBottom: 40,
   },
   button: {
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
+    paddingVertical: 8,
   },
 });
 

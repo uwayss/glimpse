@@ -1,63 +1,65 @@
-// src/screens/SettingsScreen.tsx
 import React from "react";
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  Image,
-  Alert,
-  Linking,
-} from "react-native";
+import { View, StyleSheet, ScrollView, Alert, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
 import { useProfile } from "@/context/ProfileContext";
 import { useEntries } from "@/context/EntryContext";
 import { RootStackNavigationProp } from "@/types";
-import { useTheme } from "@/context/ThemeContext";
-import ThemedText from "@/components/ThemedText";
+import { useAppTheme, useTheme } from "@/context/ThemeContext";
+import {
+  List,
+  Avatar,
+  Text,
+  Button,
+  ActivityIndicator,
+  Dialog,
+  Portal,
+  RadioButton,
+  Divider,
+} from "react-native-paper";
 
 const SettingsItem = ({
   icon,
   name,
   onPress,
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: string;
   name: string;
   onPress: () => void;
 }) => {
-  const { colors } = useTheme();
+  const theme = useAppTheme();
   return (
-    <TouchableOpacity style={styles.item} onPress={onPress}>
-      <View style={styles.itemLeft}>
-        <View
-          style={[styles.iconBg, { backgroundColor: colors.primary + "20" }]}
-        >
-          <Ionicons name={icon} size={20} color={colors.primary} />
-        </View>
-        <ThemedText style={styles.itemText}>{name}</ThemedText>
-      </View>
-      <Ionicons
-        name="chevron-forward-outline"
-        size={24}
-        color={colors.lightText}
-      />
-    </TouchableOpacity>
+    <List.Item
+      title={name}
+      titleStyle={styles.itemText}
+      onPress={onPress}
+      left={() => (
+        <Avatar.Icon
+          size={32}
+          icon={icon}
+          color={theme.colors.primary}
+          style={{ backgroundColor: `${theme.colors.primary}20` }}
+        />
+      )}
+      right={() => (
+        <List.Icon icon="chevron-right" color={theme.colors.tertiary} />
+      )}
+      style={styles.item}
+    />
   );
 };
 
 const SettingsScreen = () => {
   const navigation = useNavigation<RootStackNavigationProp>();
-  // --- CHANGE 1: Get clearProfileData from the hook ---
   const {
     profile,
     isLoading: isLoadingProfile,
     clearProfileData,
   } = useProfile();
   const { clearAllEntries } = useEntries();
-  const { colors, setTheme } = useTheme();
+  const theme = useAppTheme();
+  const { themeMode, setTheme } = useTheme();
+  const [dialogVisible, setDialogVisible] = React.useState(false);
 
   const handleLogout = () => {
     Alert.alert(
@@ -68,14 +70,9 @@ const SettingsScreen = () => {
         {
           text: "Erase Everything",
           style: "destructive",
-          onPress: async () => {
-            // --- CHANGE 2: Call the new context functions ---
-            await clearAllEntries();
-            await clearProfileData(); // This sets hasOnboarded to false
-
-            // --- CHANGE 3: Pop to the top of the stack ---
-            // This will automatically land on the Onboarding screen
-            // because AppNavigator will re-evaluate and see hasOnboarded is false.
+          onPress: () => {
+            clearAllEntries();
+            clearProfileData();
             navigation.popToTop();
           },
         },
@@ -87,158 +84,191 @@ const SettingsScreen = () => {
     Linking.openURL("https://www.google.com/policies/privacy/");
   };
 
-  const handleDisplay = () => {
-    Alert.alert("Display Mode", "Choose your preferred theme.", [
-      { text: "Light", onPress: () => setTheme("light") },
-      { text: "Dark", onPress: () => setTheme("dark") },
-      { text: "System", onPress: () => setTheme("system"), style: "cancel" },
-    ]);
-  };
-
   if (isLoadingProfile || !profile) {
     return (
       <View
         style={[
-          styles.container,
-          { justifyContent: "center", backgroundColor: colors.background },
+          styles.loadingContainer,
+          { backgroundColor: theme.colors.background },
         ]}
       >
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" />
       </View>
     );
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.card }]}>
-      <SafeAreaView>
-        <View style={styles.section}>
-          <ThemedText
-            style={[styles.sectionTitle, { color: colors.lightText }]}
-          >
-            Account
-          </ThemedText>
-          <View style={[styles.card, { backgroundColor: colors.background }]}>
-            <TouchableOpacity
-              style={styles.userItem}
-              onPress={() => navigation.navigate("EditProfile")}
+    <>
+      <ScrollView
+        style={[
+          styles.container,
+          { backgroundColor: theme.colors.surfaceVariant },
+        ]}
+      >
+        <SafeAreaView edges={["bottom"]}>
+          <View style={styles.section}>
+            <Text
+              variant="labelLarge"
+              style={[styles.sectionTitle, { color: theme.colors.tertiary }]}
             >
-              {profile.avatarUri ? (
-                <Image
-                  source={{ uri: profile.avatarUri }}
-                  style={styles.userAvatar}
-                />
-              ) : (
-                <View
-                  style={[
-                    styles.userAvatar,
-                    styles.avatarPlaceholder,
-                    { backgroundColor: colors.card },
-                  ]}
-                >
-                  <Ionicons
-                    name="person-outline"
-                    size={24}
-                    color={colors.text}
-                  />
-                </View>
-              )}
-              <View>
-                <ThemedText style={styles.userName}>{profile.name}</ThemedText>
-              </View>
-            </TouchableOpacity>
+              Account
+            </Text>
             <View
-              style={[styles.divider, { backgroundColor: colors.border }]}
-            />
-            <SettingsItem
-              icon="person-outline"
-              name="Manage Account"
-              onPress={() => navigation.navigate("EditProfile")}
-            />
+              style={[styles.card, { backgroundColor: theme.colors.surface }]}
+            >
+              <List.Item
+                style={styles.userItem}
+                onPress={() => navigation.navigate("EditProfile")}
+                title={profile.name}
+                titleStyle={styles.userName}
+                left={() =>
+                  profile.avatarUri ? (
+                    <Avatar.Image
+                      size={50}
+                      source={{ uri: profile.avatarUri }}
+                    />
+                  ) : (
+                    <Avatar.Icon size={50} icon="account" />
+                  )
+                }
+              />
+              <Divider style={styles.divider} />
+              <SettingsItem
+                icon="account-edit-outline"
+                name="Manage Account"
+                onPress={() => navigation.navigate("EditProfile")}
+              />
+              <Divider style={styles.divider} />
+              <SettingsItem
+                icon="shield-lock-outline"
+                name="Privacy"
+                onPress={handlePrivacy}
+              />
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text
+              variant="labelLarge"
+              style={[styles.sectionTitle, { color: theme.colors.tertiary }]}
+            >
+              Preferences
+            </Text>
             <View
-              style={[styles.divider, { backgroundColor: colors.border }]}
-            />
-            <SettingsItem
-              icon="shield-checkmark-outline"
-              name="Privacy"
-              onPress={handlePrivacy}
+              style={[styles.card, { backgroundColor: theme.colors.surface }]}
+            >
+              <SettingsItem
+                icon="bell-outline"
+                name="Notifications"
+                onPress={() => navigation.navigate("Notifications")}
+              />
+              <Divider style={styles.divider} />
+              <SettingsItem
+                icon="weather-night"
+                name="Display"
+                onPress={() => setDialogVisible(true)}
+              />
+            </View>
+          </View>
+
+          <View style={[styles.card, styles.logoutCard]}>
+            <List.Item
+              title="Log Out & Reset App"
+              titleStyle={styles.logoutText}
+              onPress={handleLogout}
             />
           </View>
-        </View>
+        </SafeAreaView>
+      </ScrollView>
 
-        <View style={styles.section}>
-          <ThemedText
-            style={[styles.sectionTitle, { color: colors.lightText }]}
-          >
-            Preferences
-          </ThemedText>
-          <View style={[styles.card, { backgroundColor: colors.background }]}>
-            <SettingsItem
-              icon="notifications-outline"
-              name="Notifications"
-              onPress={() => navigation.navigate("Notifications")}
-            />
-            <View
-              style={[styles.divider, { backgroundColor: colors.border }]}
-            />
-            <SettingsItem
-              icon="sunny-outline"
-              name="Display"
-              onPress={handleDisplay}
-            />
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={[styles.logoutButton, { backgroundColor: colors.background }]}
-          onPress={handleLogout}
+      <Portal>
+        <Dialog
+          visible={dialogVisible}
+          onDismiss={() => setDialogVisible(false)}
         >
-          <ThemedText style={styles.logoutText}>Log Out & Reset App</ThemedText>
-        </TouchableOpacity>
-      </SafeAreaView>
-    </ScrollView>
+          <Dialog.Title>Display Mode</Dialog.Title>
+          <Dialog.Content>
+            <RadioButton.Group
+              onValueChange={(v) => setTheme(v as any)}
+              value={themeMode}
+            >
+              <View style={styles.radioItem}>
+                <RadioButton value="light" />
+                <Text>Light</Text>
+              </View>
+              <View style={styles.radioItem}>
+                <RadioButton value="dark" />
+                <Text>Dark</Text>
+              </View>
+              <View style={styles.radioItem}>
+                <RadioButton value="system" />
+                <Text>System Default</Text>
+              </View>
+            </RadioButton.Group>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setDialogVisible(false)}>Done</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  section: { marginBottom: 20, paddingHorizontal: 15 },
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  section: {
+    marginBottom: 20,
+    padding: 15,
+  },
   sectionTitle: {
-    fontSize: 13,
-    fontWeight: "400",
     marginLeft: 16,
     marginBottom: 8,
     textTransform: "uppercase",
   },
-  card: { borderRadius: 10, overflow: "hidden" },
-  item: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 12,
+  card: {
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  itemText: {
+    fontSize: 16,
+    marginLeft: 10,
+  },
+  userItem: {
+    paddingVertical: 8,
     paddingHorizontal: 16,
   },
-  itemLeft: { flexDirection: "row", alignItems: "center" },
-  iconBg: {
-    width: 32,
-    height: 32,
-    borderRadius: 6,
-    justifyContent: "center",
-    alignItems: "center",
+  userName: {
+    fontSize: 18,
+    fontWeight: "500",
   },
-  itemText: { marginLeft: 15, fontSize: 16 },
-  userItem: { flexDirection: "row", alignItems: "center", padding: 12 },
-  userAvatar: { width: 50, height: 50, borderRadius: 25, marginRight: 15 },
-  avatarPlaceholder: { justifyContent: "center", alignItems: "center" },
-  userName: { fontSize: 18, fontWeight: "500" },
-  divider: { height: StyleSheet.hairlineWidth, marginLeft: 60 },
-  logoutButton: {
+  divider: {
+    marginStart: 70,
+  },
+  logoutCard: {
     marginHorizontal: 15,
     marginTop: 20,
-    padding: 15,
-    alignItems: "center",
-    borderRadius: 10,
   },
-  logoutText: { color: "red", fontSize: 16, fontWeight: "500" },
+  logoutText: {
+    color: "red",
+    fontSize: 16,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  radioItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  item: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
 });
 
 export default SettingsScreen;

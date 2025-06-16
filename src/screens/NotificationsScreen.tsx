@@ -1,32 +1,13 @@
-// src/screens/NotificationsScreen.tsx
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, ScrollView, Switch, Platform } from "react-native";
+import { StyleSheet, ScrollView } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useTheme } from "@/context/ThemeContext";
-import ThemedText from "@/components/ThemedText";
+import { useAppTheme } from "@/context/ThemeContext";
+import { List, Switch, Text } from "react-native-paper";
 
 const NOTIFICATIONS_ENABLED_KEY = "@glimpse_notifications_enabled";
 
-const SettingsRow = ({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) => {
-  const { colors } = useTheme();
-  return (
-    <View style={[styles.row, { borderBottomColor: colors.border }]}>
-      <ThemedText style={[styles.label, { color: colors.text }]}>
-        {label}
-      </ThemedText>
-      {children}
-    </View>
-  );
-};
-
 const NotificationsScreen = () => {
-  const { colors, isDark } = useTheme();
+  const theme = useAppTheme();
   const [isEnabled, setIsEnabled] = useState(false);
 
   useEffect(() => {
@@ -46,25 +27,25 @@ const NotificationsScreen = () => {
     <ScrollView
       style={[
         styles.container,
-        { backgroundColor: isDark ? colors.background : colors.card },
+        { backgroundColor: theme.colors.surfaceVariant },
       ]}
     >
-      <View style={[styles.section, { backgroundColor: colors.background }]}>
-        <SettingsRow label="Push Notifications">
-          <Switch
-            trackColor={{ false: "#767577", true: colors.primary }}
-            thumbColor={
-              Platform.OS === "android" ? colors.primary : colors.background
-            }
-            onValueChange={toggleSwitch}
-            value={isEnabled}
-          />
-        </SettingsRow>
-      </View>
-      <ThemedText style={[styles.description, { color: colors.lightText }]}>
+      <List.Section style={styles.section}>
+        <List.Item
+          title="Push Notifications"
+          style={{ backgroundColor: theme.colors.surface }}
+          right={() => (
+            <Switch value={isEnabled} onValueChange={toggleSwitch} />
+          )}
+        />
+      </List.Section>
+      <Text
+        variant="bodySmall"
+        style={[styles.description, { color: theme.colors.tertiary }]}
+      >
         Enable push notifications to get reminders and summaries of your
         journey.
-      </ThemedText>
+      </Text>
     </ScrollView>
   );
 };
@@ -75,23 +56,8 @@ const styles = StyleSheet.create({
   },
   section: {
     marginTop: 30,
-    marginHorizontal: 15,
-    borderRadius: 10,
-    overflow: "hidden",
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  label: {
-    fontSize: 16,
   },
   description: {
-    fontSize: 13,
     paddingHorizontal: 30,
     marginTop: 10,
     lineHeight: 18,

@@ -1,122 +1,106 @@
-// src/components/EntryCard.tsx
 import React from "react";
-import { View, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { View, StyleSheet, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { Entry, RootStackNavigationProp } from "../types";
-import { useTheme } from "../context/ThemeContext";
-import ThemedText from "./ThemedText";
+import { useAppTheme } from "../context/ThemeContext";
+import { Card, Text, Avatar } from "react-native-paper";
 
 type EntryCardProps = {
   entry: Entry;
 };
 
 const EntryCard = ({ entry }: EntryCardProps) => {
-  const { colors } = useTheme();
+  const theme = useAppTheme();
   const navigation = useNavigation<RootStackNavigationProp>();
-  const styles = stylesheet(colors);
-
-  const displayImage = entry.imageUri;
-  const displayIcon = !displayImage;
+  const styles = stylesheet(theme.colors);
 
   return (
-    <TouchableOpacity
+    <Card
+      style={styles.card}
       onPress={() => navigation.navigate("ViewEntry", { entryId: entry.id })}
+      mode="contained"
     >
-      <View style={[styles.card, { backgroundColor: colors.card }]}>
+      <View style={styles.container}>
         <View style={styles.textContainer}>
-          <ThemedText style={styles.time}>{entry.time}</ThemedText>
-          <ThemedText style={styles.title} numberOfLines={1}>
+          <Text variant="bodySmall" style={{ color: theme.colors.tertiary }}>
+            {entry.time}
+          </Text>
+          <Text variant="titleMedium" style={styles.title} numberOfLines={1}>
             {entry.title}
-          </ThemedText>
-          <ThemedText style={styles.content} numberOfLines={2}>
+          </Text>
+          <Text variant="bodyMedium" numberOfLines={2}>
             {entry.content}
-          </ThemedText>
+          </Text>
           {entry.location && (
             <View style={styles.metaRow}>
               <Ionicons
                 name="location-sharp"
                 size={14}
-                color={colors.lightText}
+                color={theme.colors.tertiary}
               />
-              <ThemedText style={styles.metaText}>{entry.location}</ThemedText>
+              <Text
+                variant="labelSmall"
+                style={[styles.metaText, { color: theme.colors.tertiary }]}
+              >
+                {entry.location}
+              </Text>
             </View>
           )}
         </View>
-        {displayIcon && (
-          <View
-            style={[
-              styles.iconContainer,
-              { backgroundColor: entry.iconColor || colors.primary },
-            ]}
-          >
-            <Ionicons
-              name={entry.icon || "book-outline"}
-              size={40}
+        <View style={styles.visualContainer}>
+          {entry.imageUri ? (
+            <Image source={{ uri: entry.imageUri }} style={styles.image} />
+          ) : (
+            <Avatar.Icon
+              size={64}
+              icon={entry.icon || "notebook"}
+              style={{
+                backgroundColor: entry.iconColor || theme.colors.primary,
+              }}
               color="white"
             />
-          </View>
-        )}
-        {displayImage && (
-          <Image
-            source={entry.imageUri ? { uri: entry.imageUri } : undefined}
-            style={styles.image}
-          />
-        )}
+          )}
+        </View>
       </View>
-    </TouchableOpacity>
+    </Card>
   );
 };
 
 const stylesheet = (colors: any) =>
   StyleSheet.create({
     card: {
-      borderRadius: 15,
-      padding: 15,
-      marginBottom: 15,
+      marginBottom: 12,
+    },
+    container: {
       flexDirection: "row",
+      padding: 16,
       alignItems: "center",
     },
     textContainer: {
       flex: 1,
-      marginRight: 10,
-    },
-    time: {
-      fontSize: 12,
-      color: colors.lightText,
-      marginBottom: 5,
+      marginRight: 12,
     },
     title: {
-      fontSize: 16,
       fontWeight: "bold",
-      marginBottom: 5,
-    },
-    content: {
-      fontSize: 14,
-      lineHeight: 20,
+      marginBottom: 4,
     },
     metaRow: {
       flexDirection: "row",
       alignItems: "center",
       marginTop: 8,
-      opacity: 0.8,
     },
     metaText: {
       marginLeft: 4,
-      fontSize: 12,
-      color: colors.lightText,
     },
-    iconContainer: {
-      width: 80,
-      height: 80,
-      borderRadius: 10,
+    visualContainer: {
       justifyContent: "center",
       alignItems: "center",
     },
     image: {
       width: 80,
       height: 80,
-      borderRadius: 10,
+      borderRadius: 12,
       resizeMode: "cover",
     },
   });

@@ -1,10 +1,8 @@
-// src/types/index.ts
-import { Ionicons } from "@expo/vector-icons";
-import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { NavigatorScreenParams } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 
-export type EntryCategory = "Personal" | "Travel" | "Food" | "Work";
+export type EntryCategory = string;
 
 export type Entry = {
   id: string;
@@ -12,7 +10,7 @@ export type Entry = {
   time?: string;
   title?: string;
   content?: string;
-  icon?: keyof typeof Ionicons.glyphMap;
+  icon?: string;
   iconColor?: string;
   imageUri?: string | null;
   location?: string | null;
@@ -28,7 +26,7 @@ export type SearchResult = {
   id: string;
   title: string;
   date: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: string;
   iconColor: string;
 };
 

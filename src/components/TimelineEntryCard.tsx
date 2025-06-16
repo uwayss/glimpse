@@ -1,18 +1,18 @@
-// src/components/TimelineEntryCard.tsx
 import React from "react";
 import {
-  View,
   StyleSheet,
   Dimensions,
   Animated,
-  TouchableOpacity,
   Alert,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { Entry } from "../types";
 import { useEntries } from "@/context/EntryContext";
-import { useTheme } from "../context/ThemeContext";
-import ThemedText from "./ThemedText";
+import { AppTheme, useAppTheme } from "../context/ThemeContext";
+import { Text } from "react-native-paper";
+import { Ionicons } from "@expo/vector-icons";
+
 const { width } = Dimensions.get("window");
 
 export const ITEM_HEIGHT = 350;
@@ -32,6 +32,7 @@ const TimelineEntryCard = ({
   index,
 }: TimelineEntryCardProps) => {
   const { deleteEntry } = useEntries();
+  const theme = useAppTheme();
 
   const inputRange = [
     (index - 1) * SNAP_INTERVAL,
@@ -61,40 +62,43 @@ const TimelineEntryCard = ({
       },
     ]);
   };
-  const { colors } = useTheme();
-  const styles = stylesheet(colors);
+  const styles = stylesheet(theme);
   return (
     <Animated.View
       style={[
         styles.card,
-        { backgroundColor: colors.background, transform: [{ scale }] },
+        { backgroundColor: theme.colors.background, transform: [{ scale }] },
       ]}
     >
       <Animated.View
         style={[styles.deleteButton, { opacity: deleteButtonOpacity }]}
       >
         <TouchableOpacity onPress={handleDelete}>
-          <Ionicons name="trash-outline" size={24} color={colors.lightText} />
+          <Ionicons
+            name="trash-outline"
+            size={24}
+            color={theme.colors.tertiary}
+          />
         </TouchableOpacity>
       </Animated.View>
 
       <View
         style={[styles.iconContainer, { backgroundColor: entry.iconColor }]}
       >
-        <Ionicons name={entry.icon} size={40} color="white" />
+        <Ionicons name={entry.icon as any} size={40} color="white" />
       </View>
-      <ThemedText style={styles.title}>{entry.title}</ThemedText>
-      <ThemedText style={styles.time}>{entry.time}</ThemedText>
-      <ThemedText style={styles.content}>{entry.content}</ThemedText>
+      <Text style={styles.title}>{entry.title}</Text>
+      <Text style={styles.time}>{entry.time}</Text>
+      <Text style={styles.content}>{entry.content}</Text>
     </Animated.View>
   );
 };
-function stylesheet(colors: any) {
+function stylesheet(theme: AppTheme) {
   return StyleSheet.create({
     card: {
       width: ITEM_WIDTH,
       height: ITEM_HEIGHT,
-      backgroundColor: colors.background,
+      backgroundColor: theme.colors.background,
       borderRadius: 20,
       padding: 20,
       marginVertical: VERTICAL_MARGIN,
@@ -122,18 +126,18 @@ function stylesheet(colors: any) {
     title: {
       fontSize: 24,
       fontWeight: "bold",
-      color: colors.text,
+      color: theme.colors.onSurface,
       marginBottom: 25,
       textAlign: "center",
     },
     time: {
       fontSize: 16,
-      color: colors.lightText,
+      color: theme.colors.onSurfaceVariant,
       marginBottom: 15,
     },
     content: {
       fontSize: 16,
-      color: colors.text,
+      color: theme.colors.onSurface,
       textAlign: "center",
       lineHeight: 24,
     },

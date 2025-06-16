@@ -1,37 +1,37 @@
-// src/screens/NewEntryScreen.tsx
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  Platform,
   Alert,
   Image,
-  ActivityIndicator,
-  FlatList,
   ScrollView,
-  Animated,
+  FlatList,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
-import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from "../context/ThemeContext";
+import { AppTheme, useAppTheme } from "../context/ThemeContext";
 import { useEntries } from "@/context/EntryContext";
-import ThemedText from "@/components/ThemedText";
 import { EntryCategory } from "@/types";
+import {
+  Appbar,
+  TextInput,
+  Chip,
+  IconButton,
+  Button,
+  ActivityIndicator,
+  Text,
+  Portal,
+  Dialog,
+} from "react-native-paper";
 
-const CATEGORIES: EntryCategory[] = ["Personal", "Travel", "Food", "Work"];
+const ADD_CHIP_IDENTIFIER = "ADD_NEW_CATEGORY_CHIP";
 
 const NewEntryScreen = () => {
   const navigation = useNavigation();
-  const { addEntry } = useEntries();
-  const { colors } = useTheme();
-
-  const topElementsAnim = useRef(new Animated.Value(0)).current;
-  const bottomBarAnim = useRef(new Animated.Value(0)).current;
+  const { addEntry, categories, addCategory } = useEntries();
+  const theme = useAppTheme();
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -40,6 +40,18 @@ const NewEntryScreen = () => {
   const [selectedCategory, setSelectedCategory] =
     useState<EntryCategory>("Personal");
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+
+  const handleAddNewCategory = async () => {
+    const trimmedName = newCategoryName.trim();
+    if (trimmedName) {
+      await addCategory(trimmedName);
+      setSelectedCategory(trimmedName);
+    }
+    setNewCategoryName("");
+    setDialogVisible(false);
+  };
 
   const handlePickImage = async () => {
     const permissionResult =
@@ -112,271 +124,211 @@ const NewEntryScreen = () => {
     navigation.goBack();
   };
 
-  const styles = stylesheet(colors);
+  const styles = stylesheet(theme);
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
-      <View style={{ flex: 1 }}>
-        <Animated.View style={{ transform: [{ translateY: topElementsAnim }] }}>
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Ionicons name="close" size={30} color={colors.text} />
-            </TouchableOpacity>
-            <ThemedText style={styles.headerTitle}>New Entry</ThemedText>
-            <View style={{ width: 30 }} />
-          </View>
-          <ThemedText style={styles.categoryTitle}>CATEGORY</ThemedText>
-          <FlatList
-            horizontal
-            data={CATEGORIES}
-            keyExtractor={(item) => item}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryList}
-            renderItem={({ item }) => {
-              const isActive = item === selectedCategory;
+    <SafeAreaView style={styles.container}>
+      <Appbar.Header mode="center-aligned">
+        <Appbar.Action icon="close" onPress={() => navigation.goBack()} />
+        <Appbar.Content title="New Entry" />
+        <Button onPress={handleSave}>Save</Button>
+      </Appbar.Header>
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text
+          variant="labelLarge"
+          style={[styles.categoryTitle, { color: theme.colors.tertiary }]}
+        >
+          CATEGORY
+        </Text>
+        <FlatList
+          horizontal
+          data={[...categories, ADD_CHIP_IDENTIFIER]}
+          keyExtractor={(item) => item}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryList}
+          renderItem={({ item }) => {
+            if (item === ADD_CHIP_IDENTIFIER) {
               return (
-                <TouchableOpacity
-                  style={[
-                    styles.categoryChip,
-                    isActive
-                      ? { backgroundColor: colors.primary }
-                      : { backgroundColor: colors.card },
-                  ]}
-                  onPress={() => setSelectedCategory(item)}
+                <Chip
+                  icon="plus"
+                  onPress={() => setDialogVisible(true)}
+                  style={styles.categoryChip}
                 >
-                  <ThemedText
-                    style={[
-                      styles.categoryText,
-                      isActive && { color: "white" },
-                    ]}
-                  >
-                    {item}
-                  </ThemedText>
-                </TouchableOpacity>
+                  New
+                </Chip>
               );
-            }}
-          />
-        </Animated.View>
-
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          {location && (
-            <View style={styles.locationChipContainer}>
-              <View style={[styles.metaChip, { backgroundColor: colors.card }]}>
-                <Ionicons
-                  name="location-sharp"
-                  size={14}
-                  color={colors.primary}
-                />
-                <ThemedText style={styles.metaText}>{location}</ThemedText>
-                <TouchableOpacity onPress={() => setLocation(null)}>
-                  <Ionicons name="close" size={16} color={colors.lightText} />
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
-          <View style={styles.inputWrapper}>
-            <TextInput
-              style={[styles.titleInput, { color: colors.text }]}
-              placeholder="Title"
-              placeholderTextColor={colors.lightText}
-              value={title}
-              onChangeText={setTitle}
-            />
-            <TextInput
-              style={[styles.contentInput, { color: colors.text }]}
-              multiline
-              placeholder="What's on your mind?"
-              placeholderTextColor={colors.lightText}
-              value={content}
-              onChangeText={setContent}
-            />
-          </View>
-          {imageUri && (
-            <View style={styles.imagePreviewContainer}>
-              <Image source={{ uri: imageUri }} style={styles.imagePreview} />
-              <TouchableOpacity
-                onPress={() => setImageUri(null)}
-                style={styles.removeImageButton}
+            }
+            return (
+              <Chip
+                selected={item === selectedCategory}
+                onPress={() => setSelectedCategory(item)}
+                style={styles.categoryChip}
               >
-                <Ionicons name="close-circle" size={24} color="white" />
-              </TouchableOpacity>
-            </View>
-          )}
-        </ScrollView>
+                {item}
+              </Chip>
+            );
+          }}
+        />
 
-        <Animated.View
-          style={[
-            styles.footer,
-            { transform: [{ translateY: bottomBarAnim }] },
-          ]}
-        >
-          <View
-            style={[styles.actionsContainer, { borderTopColor: colors.border }]}
+        {location && (
+          <Chip
+            icon="map-marker"
+            onClose={() => setLocation(null)}
+            style={styles.locationChip}
           >
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handlePickImage}
-            >
-              <Ionicons name="camera-outline" size={24} color={colors.text} />
-              <ThemedText style={styles.actionText}>Photo</ThemedText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handlePickLocation}
-            >
-              {isFetchingLocation ? (
-                <ActivityIndicator color={colors.primary} />
-              ) : (
-                <Ionicons
-                  name="location-outline"
-                  size={24}
-                  color={colors.text}
-                />
-              )}
-              <ThemedText style={styles.actionText}>Location</ThemedText>
-            </TouchableOpacity>
+            {location}
+          </Chip>
+        )}
+
+        <View>
+          <TextInput
+            placeholder="Title"
+            value={title}
+            onChangeText={setTitle}
+            style={styles.titleInput}
+            contentStyle={styles.inputContent}
+            mode="flat"
+            underlineColor="transparent"
+            activeUnderlineColor="transparent"
+            placeholderTextColor={theme.colors.tertiary}
+          />
+          <TextInput
+            placeholder="What's on your mind?"
+            value={content}
+            onChangeText={setContent}
+            multiline
+            style={styles.contentInput}
+            contentStyle={styles.inputContent}
+            mode="flat"
+            underlineColor="transparent"
+            activeUnderlineColor="transparent"
+            placeholderTextColor={theme.colors.tertiary}
+          />
+        </View>
+        {imageUri && (
+          <View style={styles.imageContainer}>
+            <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+            <IconButton
+              icon="close-circle"
+              onPress={() => setImageUri(null)}
+              style={styles.removeImageButton}
+              iconColor="white"
+              containerColor="rgba(0,0,0,0.5)"
+            />
           </View>
+        )}
+      </ScrollView>
 
-          <TouchableOpacity
-            style={[styles.saveButton, { backgroundColor: colors.primary }]}
-            onPress={handleSave}
-          >
-            <ThemedText style={styles.saveButtonText}>Save</ThemedText>
-          </TouchableOpacity>
-        </Animated.View>
+      <View style={styles.footer}>
+        <IconButton icon="camera-outline" size={24} onPress={handlePickImage} />
+        {isFetchingLocation ? (
+          <ActivityIndicator style={styles.locationLoader} />
+        ) : (
+          <IconButton
+            icon="map-marker-outline"
+            size={24}
+            onPress={handlePickLocation}
+          />
+        )}
       </View>
+      <Portal>
+        <Dialog
+          visible={dialogVisible}
+          onDismiss={() => setDialogVisible(false)}
+        >
+          <Dialog.Title>Add New Category</Dialog.Title>
+          <Dialog.Content>
+            <TextInput
+              label="Category Name"
+              value={newCategoryName}
+              onChangeText={setNewCategoryName}
+              autoFocus
+              mode="outlined"
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setDialogVisible(false)}>Cancel</Button>
+            <Button onPress={handleAddNewCategory}>Add</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </SafeAreaView>
   );
 };
 
-function stylesheet(colors: any) {
+function stylesheet(theme: AppTheme) {
   return StyleSheet.create({
     container: {
       flex: 1,
+      backgroundColor: theme.colors.background,
     },
-    header: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      paddingHorizontal: 15,
-      paddingTop: 15,
-      paddingBottom: 5,
+    scrollContent: {
+      paddingBottom: 20,
     },
-    headerTitle: {
-      fontSize: 18,
-      fontWeight: "bold",
+    categoryTitle: {
+      marginTop: 10,
+      marginBottom: 10,
+      paddingHorizontal: 16,
+      textTransform: "uppercase",
     },
-    inputWrapper: {
-      paddingHorizontal: 20,
-      flex: 1,
+    categoryList: {
+      paddingHorizontal: 16,
+      paddingBottom: 10,
+    },
+    categoryChip: {
+      marginRight: 8,
+    },
+    locationChip: {
+      alignSelf: "flex-start",
+      marginTop: 10,
+      marginHorizontal: 16,
     },
     titleInput: {
+      backgroundColor: "transparent",
       fontSize: 28,
       fontWeight: "bold",
-      paddingTop: 10,
     },
     contentInput: {
-      paddingTop: 10,
+      backgroundColor: "transparent",
+      minHeight: 100,
       fontSize: 18,
       textAlignVertical: "top",
       lineHeight: 26,
     },
-    locationChipContainer: {
-      paddingHorizontal: 20,
-      marginTop: 10,
-      flexDirection: "row",
+    inputContent: {
+      paddingHorizontal: 16,
     },
-    metaChip: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingVertical: 5,
-      paddingHorizontal: 10,
-      borderRadius: 20,
-    },
-    metaText: {
-      marginLeft: 5,
-      marginRight: 5,
-      fontSize: 12,
-    },
-    imagePreviewContainer: {
-      marginHorizontal: 20,
-      marginTop: 35,
+    imageContainer: {
+      marginTop: 20,
+      marginHorizontal: 16,
       alignItems: "center",
     },
     imagePreview: {
       width: "100%",
       height: 200,
-      borderRadius: 10,
+      borderRadius: theme.roundness,
       resizeMode: "cover",
     },
     removeImageButton: {
       position: "absolute",
-      top: 10,
-      right: 10,
-      backgroundColor: "rgba(0,0,0,0.5)",
-      borderRadius: 12,
-    },
-    categoryTitle: {
-      fontSize: 12,
-      fontWeight: "600",
-      paddingHorizontal: 20,
-      marginTop: 5,
-      marginBottom: 10,
-      color: colors.lightText,
-      textTransform: "uppercase",
-    },
-    categoryList: {
-      paddingHorizontal: 20,
-      paddingBottom: 10,
-    },
-    categoryChip: {
-      paddingVertical: 6,
-      paddingHorizontal: 14,
-      borderRadius: 20,
-      marginRight: 10,
-    },
-    categoryText: {
-      fontWeight: "600",
+      top: 5,
+      right: 5,
     },
     footer: {
-      // Wrapper for bottom content
-    },
-    actionsContainer: {
       flexDirection: "row",
-      justifyContent: "space-around",
-      paddingTop: 15,
-      paddingBottom: 10,
-      borderTopWidth: 1,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: theme.colors.outline,
     },
-    actionButton: {
-      alignItems: "center",
-      minWidth: 60,
-    },
-    actionText: {
-      marginTop: 3,
-      fontSize: 12,
-    },
-    saveButton: {
-      borderRadius: 25,
-      padding: 15,
-      marginHorizontal: 20,
-      marginBottom: Platform.OS === "ios" ? 0 : 20,
-      marginTop: 5,
-      alignItems: "center",
-    },
-    saveButtonText: {
-      color: "white",
-      fontSize: 16,
-      fontWeight: "bold",
+    locationLoader: {
+      marginHorizontal: 12,
+      marginVertical: 6,
     },
   });
 }
-
 export default NewEntryScreen;

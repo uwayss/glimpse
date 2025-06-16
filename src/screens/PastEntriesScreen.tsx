@@ -1,33 +1,29 @@
-// src/screens/PastEntriesScreen.tsx
 import React, { useState, useMemo, useRef } from "react";
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-  ScrollView,
-  ActivityIndicator,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View, StyleSheet, Animated, ScrollView } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
-import { useTheme } from "../context/ThemeContext";
+import { AppTheme, useAppTheme } from "../context/ThemeContext";
 import { Entry } from "../types";
 import TimelineEntryCard, {
   SNAP_INTERVAL,
 } from "../components/TimelineEntryCard";
 import EntryCard from "../components/EntryCard";
 import { useEntries } from "@/context/EntryContext";
-import ThemedText from "@/components/ThemedText";
+import {
+  Appbar,
+  SegmentedButtons,
+  Text,
+  ActivityIndicator,
+} from "react-native-paper";
 
 const PastEntriesScreen = () => {
   const { entries, isLoading } = useEntries();
-  const { colors } = useTheme();
+  const theme = useAppTheme();
   const [activeView, setActiveView] = useState<"calendar" | "timeline">(
     "calendar"
   );
 
   const [selectedDate, setSelectedDate] = useState<string>(
-    entries[0]?.date || new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0]
   );
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -42,101 +38,80 @@ const PastEntriesScreen = () => {
         dotColor?: string;
         selected?: boolean;
         selectedColor?: string;
+        activeOpacity?: number;
       };
     } = entries.reduce((acc, entry: Entry) => {
       if (entry.date) {
-        acc[entry.date] = { marked: true, dotColor: colors.primary };
+        acc[entry.date] = {
+          marked: true,
+          dotColor: theme.colors.primary,
+        };
       }
       return acc;
-    }, {} as { [key: string]: { marked: boolean; dotColor: string; selected?: boolean; selectedColor?: string } });
+    }, {} as { [key: string]: { marked?: boolean; dotColor?: string } });
 
     if (marks[selectedDate]) {
       marks[selectedDate].selected = true;
-      marks[selectedDate].selectedColor = colors.primary;
     } else {
-      marks[selectedDate] = { selected: true, selectedColor: colors.primary };
+      marks[selectedDate] = { selected: true };
     }
+    marks[selectedDate].selectedColor = theme.colors.primary;
 
     return marks;
-  }, [selectedDate, entries, colors.primary]);
-
-  function SwitcherButton({
-    text,
-    onPress,
-    isActive,
-  }: {
-    text: string;
-    onPress: () => void;
-    isActive: boolean;
-  }) {
-    return (
-      <TouchableOpacity
-        style={[styles.switcherButton, isActive && styles.activeButton]}
-        onPress={onPress}
-      >
-        <ThemedText
-          style={[styles.switcherText, isActive && styles.activeText]}
-        >
-          {text}
-        </ThemedText>
-      </TouchableOpacity>
-    );
-  }
+  }, [selectedDate, entries, theme.colors.primary]);
 
   const renderContent = () => {
     if (isLoading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" />
         </View>
       );
     }
 
     if (activeView === "calendar") {
       return (
-        <View style={styles.contentContainer}>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <Calendar
-              current={selectedDate}
-              onDayPress={(day: DateData) =>
-                setSelectedDate(day.dateString as string)
-              }
-              markedDates={markedDates}
-              theme={{
-                backgroundColor: colors.background,
-                calendarBackground: colors.background,
-                textSectionTitleColor: colors.lightText,
-                todayTextColor: colors.primary,
-                dayTextColor: colors.text,
-                textDisabledColor: colors.border,
-                arrowColor: colors.primary,
-                monthTextColor: colors.text,
-                textDayFontWeight: "300",
-                textMonthFontWeight: "bold",
-                textDayHeaderFontWeight: "300",
-                textDayFontSize: 16,
-                textMonthFontSize: 16,
-                textDayHeaderFontSize: 14,
-              }}
-            />
-            <View style={styles.entriesListContainer}>
-              <ThemedText style={styles.entriesListTitle}>
-                Entries for {selectedDate}
-              </ThemedText>
-              {entriesForSelectedDate.length > 0 ? (
-                entriesForSelectedDate.map((item: Entry) => (
-                  <EntryCard key={item.id} entry={item} />
-                ))
-              ) : (
-                <View style={styles.noEntriesContainer}>
-                  <ThemedText style={styles.noEntriesText}>
-                    No entries for this day.
-                  </ThemedText>
-                </View>
-              )}
-            </View>
-          </ScrollView>
-        </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Calendar
+            current={selectedDate}
+            onDayPress={(day: DateData) =>
+              setSelectedDate(day.dateString as string)
+            }
+            markedDates={markedDates}
+            theme={{
+              backgroundColor: theme.colors.background,
+              calendarBackground: theme.colors.background,
+              textSectionTitleColor: theme.colors.tertiary,
+              todayTextColor: theme.colors.primary,
+              dayTextColor: theme.colors.onBackground,
+              textDisabledColor: theme.colors.outline,
+              arrowColor: theme.colors.primary,
+              monthTextColor: theme.colors.onBackground,
+              textDayFontWeight: "300",
+              textMonthFontWeight: "bold",
+              textDayHeaderFontWeight: "300",
+              textDayFontSize: 16,
+              textMonthFontSize: 16,
+              textDayHeaderFontSize: 14,
+            }}
+          />
+          <View style={styles.entriesListContainer}>
+            <Text variant="titleLarge" style={styles.entriesListTitle}>
+              Entries for {selectedDate}
+            </Text>
+            {entriesForSelectedDate.length > 0 ? (
+              entriesForSelectedDate.map((item: Entry) => (
+                <EntryCard key={item.id} entry={item} />
+              ))
+            ) : (
+              <View style={styles.noEntriesContainer}>
+                <Text style={{ color: theme.colors.tertiary }}>
+                  No entries for this day.
+                </Text>
+              </View>
+            )}
+          </View>
+        </ScrollView>
       );
     }
 
@@ -146,9 +121,7 @@ const PastEntriesScreen = () => {
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         snapToInterval={SNAP_INTERVAL}
-        contentContainerStyle={{
-          alignItems: "center",
-        }}
+        contentContainerStyle={{ alignItems: "center", paddingTop: 10 }}
         decelerationRate="fast"
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -163,34 +136,35 @@ const PastEntriesScreen = () => {
     );
   };
 
-  const styles = stylesheet(colors);
+  const styles = stylesheet(theme);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <ThemedText style={styles.headerTitle}>Past Entries</ThemedText>
-      </View>
+    <View style={styles.container}>
+      <Appbar.Header
+        mode="large"
+        style={{ backgroundColor: theme.colors.background }}
+      >
+        <Appbar.Content title="Past Entries" />
+      </Appbar.Header>
       <View style={styles.switcherContainer}>
-        <SwitcherButton
-          text="Calendar"
-          onPress={() => setActiveView("calendar")}
-          isActive={activeView === "calendar"}
-        />
-        <SwitcherButton
-          text="Timeline"
-          onPress={() => setActiveView("timeline")}
-          isActive={activeView === "timeline"}
+        <SegmentedButtons
+          value={activeView}
+          onValueChange={setActiveView}
+          buttons={[
+            { value: "calendar", label: "Calendar" },
+            { value: "timeline", label: "Timeline" },
+          ]}
         />
       </View>
-      {renderContent()}
-    </SafeAreaView>
+      <View style={styles.contentContainer}>{renderContent()}</View>
+    </View>
   );
 };
-function stylesheet(colors: any) {
+function stylesheet(theme: AppTheme) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: theme.colors.background,
     },
     contentContainer: {
       flex: 1,
@@ -200,41 +174,9 @@ function stylesheet(colors: any) {
       justifyContent: "center",
       alignItems: "center",
     },
-    header: {
-      paddingHorizontal: 20,
-      paddingTop: 20,
-      paddingBottom: 10,
-    },
-    headerTitle: {
-      fontSize: 34,
-      fontWeight: "bold",
-      color: colors.text,
-    },
     switcherContainer: {
-      flexDirection: "row",
-      margin: 20,
-      backgroundColor: colors.card,
-      borderRadius: 10,
-      borderWidth: 1,
-      borderColor: "#E0E0E0",
-    },
-    switcherButton: {
-      flex: 1,
-      paddingVertical: 12,
-      borderRadius: 8,
-      alignItems: "center",
-      margin: 3,
-    },
-    activeButton: {
-      backgroundColor: colors.background,
-    },
-    switcherText: {
-      fontSize: 16,
-      fontWeight: "500",
-      color: colors.lightText,
-    },
-    activeText: {
-      color: colors.primary,
+      paddingHorizontal: 20,
+      paddingBottom: 10,
     },
     entriesListContainer: {
       paddingHorizontal: 20,
@@ -242,7 +184,6 @@ function stylesheet(colors: any) {
       paddingBottom: 20,
     },
     entriesListTitle: {
-      fontSize: 18,
       fontWeight: "bold",
       marginBottom: 15,
     },
@@ -250,10 +191,8 @@ function stylesheet(colors: any) {
       height: 100,
       justifyContent: "center",
       alignItems: "center",
-    },
-    noEntriesText: {
-      fontSize: 16,
-      color: colors.lightText,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: theme.roundness,
     },
   });
 }

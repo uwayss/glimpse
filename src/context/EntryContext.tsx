@@ -1,4 +1,3 @@
-// src/context/EntryContext.tsx
 import React, {
   createContext,
   useState,
@@ -8,14 +7,20 @@ import React, {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Entry, EntryCategory } from "@/types";
-import { Ionicons } from "@expo/vector-icons";
 
-// We import the static colors here to avoid a dependency cycle with ThemeContext
 const LightColors = {
   primary: "#007AFF",
 };
 
-const STORAGE_KEY = "@glimpse_entries";
+const ENTRIES_STORAGE_KEY = "@glimpse_entries";
+const CATEGORIES_STORAGE_KEY = "@glimpse_categories";
+
+const DEFAULT_CATEGORIES: EntryCategory[] = [
+  "Personal",
+  "Travel",
+  "Food",
+  "Work",
+];
 
 interface AddEntryPayload {
   title: string;
@@ -27,49 +32,90 @@ interface AddEntryPayload {
 
 interface EntryContextType {
   entries: Entry[];
+  categories: EntryCategory[];
   addEntry: (payload: AddEntryPayload) => void;
   deleteEntry: (id: string) => void;
   clearAllEntries: () => void;
+  addCategory: (categoryName: string) => Promise<void>;
   isLoading: boolean;
 }
 
 const EntryContext = createContext<EntryContextType>({
   entries: [],
+  categories: [],
   addEntry: () => {},
   deleteEntry: () => {},
   clearAllEntries: () => {},
+  addCategory: async () => {},
   isLoading: true,
 });
 
 export const EntryProvider = ({ children }: PropsWithChildren) => {
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [categories, setCategories] = useState<EntryCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const saveEntriesToStorage = async (updatedEntries: Entry[]) => {
     try {
       const jsonValue = JSON.stringify(updatedEntries);
-      await AsyncStorage.setItem(STORAGE_KEY, jsonValue);
+      await AsyncStorage.setItem(ENTRIES_STORAGE_KEY, jsonValue);
     } catch (e) {
       console.error("Failed to save entries to storage", e);
     }
   };
 
+  const saveCategoriesToStorage = async (
+    updatedCategories: EntryCategory[]
+  ) => {
+    try {
+      const jsonValue = JSON.stringify(updatedCategories);
+      await AsyncStorage.setItem(CATEGORIES_STORAGE_KEY, jsonValue);
+    } catch (e) {
+      console.error("Failed to save categories to storage", e);
+    }
+  };
+
   useEffect(() => {
-    const loadEntries = async () => {
+    const loadData = async () => {
       try {
-        const storedEntries = await AsyncStorage.getItem(STORAGE_KEY);
+        const storedEntries = await AsyncStorage.getItem(ENTRIES_STORAGE_KEY);
         if (storedEntries) {
           setEntries(JSON.parse(storedEntries));
         }
+
+        const storedCategories = await AsyncStorage.getItem(
+          CATEGORIES_STORAGE_KEY
+        );
+        if (storedCategories) {
+          setCategories(JSON.parse(storedCategories));
+        } else {
+          setCategories(DEFAULT_CATEGORIES);
+          await saveCategoriesToStorage(DEFAULT_CATEGORIES);
+        }
       } catch (e) {
-        console.error("Failed to load entries from storage", e);
+        console.error("Failed to load data from storage", e);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadEntries();
+    loadData();
   }, []);
+
+  const addCategory = async (categoryName: string) => {
+    const trimmedName = categoryName.trim();
+    if (!trimmedName) {
+      return;
+    }
+    const lowerCaseCategories = categories.map((c) => c.toLowerCase());
+    if (lowerCaseCategories.includes(trimmedName.toLowerCase())) {
+      return;
+    }
+
+    const updatedCategories = [...categories, trimmedName];
+    setCategories(updatedCategories);
+    await saveCategoriesToStorage(updatedCategories);
+  };
 
   const addEntry = async (payload: AddEntryPayload) => {
     const category = payload.category || "Personal";
@@ -95,18 +141,16 @@ export const EntryProvider = ({ children }: PropsWithChildren) => {
     await saveEntriesToStorage(updatedEntries);
   };
 
-  const getIconForCategory = (
-    category: EntryCategory
-  ): keyof typeof Ionicons.glyphMap => {
-    switch (category) {
-      case "Travel":
-        return "airplane-outline";
-      case "Food":
-        return "restaurant-outline";
-      case "Work":
+  const getIconForCategory = (category: EntryCategory): string => {
+    switch (category.toLowerCase()) {
+      case "travel":
+        return "airplane";
+      case "food":
+        return "silverware-fork-knife";
+      case "work":
         return "briefcase-outline";
       default:
-        return "book-outline";
+        return "notebook-outline";
     }
   };
 
@@ -119,7 +163,9 @@ export const EntryProvider = ({ children }: PropsWithChildren) => {
   const clearAllEntries = async () => {
     try {
       setEntries([]);
-      await AsyncStorage.removeItem(STORAGE_KEY);
+      await AsyncStorage.removeItem(ENTRIES_STORAGE_KEY);
+      setCategories(DEFAULT_CATEGORIES);
+      await saveCategoriesToStorage(DEFAULT_CATEGORIES);
     } catch (e) {
       console.error("Failed to clear entries from storage", e);
     }
@@ -127,7 +173,15 @@ export const EntryProvider = ({ children }: PropsWithChildren) => {
 
   return (
     <EntryContext.Provider
-      value={{ entries, addEntry, deleteEntry, clearAllEntries, isLoading }}
+      value={{
+        entries,
+        categories,
+        addEntry,
+        addCategory,
+        deleteEntry,
+        clearAllEntries,
+        isLoading,
+      }}
     >
       {children}
     </EntryContext.Provider>

@@ -1,22 +1,12 @@
-// src/screens/GlimpseScreen.tsx
 import React, { useMemo } from "react";
-import {
-  View,
-  StyleSheet,
-  SectionList,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
+import { View, StyleSheet, SectionList } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from "../context/ThemeContext";
+import { AppTheme, useAppTheme } from "../context/ThemeContext";
 import EntryCard from "../components/EntryCard";
 import { DayEntries, RootStackNavigationProp, Entry } from "../types";
 import { useEntries } from "@/context/EntryContext";
-import ThemedText from "@/components/ThemedText";
+import { Appbar, Text, FAB, ActivityIndicator } from "react-native-paper";
 
-// A helper function to group entries by date
 const groupEntriesByDate = (entries: Entry[]): DayEntries[] => {
   if (!entries.length) return [];
 
@@ -29,7 +19,6 @@ const groupEntriesByDate = (entries: Entry[]): DayEntries[] => {
 
   const grouped = entries.reduce((acc, entry) => {
     const entryDate = entry.date || "Unknown";
-    // Initialize the array if it doesn't exist
     if (!acc[entryDate]) {
       acc[entryDate] = [];
     }
@@ -37,11 +26,10 @@ const groupEntriesByDate = (entries: Entry[]): DayEntries[] => {
     return acc;
   }, {} as Record<string, Entry[]>);
 
-  // Convert the grouped object into an array for SectionList
   return Object.keys(grouped)
-    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()) // Sort by most recent date first
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
     .map((date) => {
-      let title = date; // Default title is the date string
+      let title = date;
       if (date === todayStr) title = "Today";
       if (date === yesterdayStr) title = "Yesterday";
       return { title, data: grouped[date] };
@@ -50,20 +38,17 @@ const groupEntriesByDate = (entries: Entry[]): DayEntries[] => {
 
 const GlimpseScreen = () => {
   const navigation = useNavigation<RootStackNavigationProp>();
-  // Get live data and the loading state from our context
   const { entries, isLoading } = useEntries();
-  const { colors } = useTheme();
-
-  // Memoize the grouped data so it only recalculates when entries change
+  const theme = useAppTheme();
   const sectionedData = useMemo(() => groupEntriesByDate(entries), [entries]);
 
-  const styles = stylesheet(colors);
+  const styles = stylesheet(theme);
 
   const renderContent = () => {
     if (isLoading) {
       return (
         <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" />
         </View>
       );
     }
@@ -75,7 +60,9 @@ const GlimpseScreen = () => {
           keyExtractor={(item, index) => item.id + index}
           renderItem={({ item }) => <EntryCard entry={item} />}
           renderSectionHeader={({ section: { title } }) => (
-            <ThemedText style={styles.sectionHeader}>{title}</ThemedText>
+            <Text variant="headlineSmall" style={styles.sectionHeader}>
+              {title}
+            </Text>
           )}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
@@ -85,55 +72,53 @@ const GlimpseScreen = () => {
 
     return (
       <View style={styles.emptyContainer}>
-        <ThemedText style={styles.emptyText}>No entries yet.</ThemedText>
-        <ThemedText style={styles.emptySubText}>
-          Tap the &apos;+&apos; to add your first glimpse!
-        </ThemedText>
+        <Text variant="titleLarge" style={styles.emptyText}>
+          No entries yet.
+        </Text>
+        <Text
+          variant="bodyMedium"
+          style={[styles.emptySubText, { color: theme.colors.tertiary }]}
+        >
+          Tap the + to add your first glimpse!
+        </Text>
       </View>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <ThemedText style={styles.headerTitle}>Glimpse</ThemedText>
-        <TouchableOpacity onPress={() => navigation.navigate("NewEntry")}>
-          <Ionicons name="add" size={32} color={colors.text} />
-        </TouchableOpacity>
-      </View>
+    <View style={styles.container}>
+      <Appbar.Header
+        mode="large"
+        style={{ backgroundColor: theme.colors.background }}
+      >
+        <Appbar.Content title="Glimpse" />
+      </Appbar.Header>
       {renderContent()}
-    </SafeAreaView>
+      <FAB
+        icon="plus"
+        style={styles.fab}
+        onPress={() => navigation.navigate("NewEntry")}
+      />
+    </View>
   );
 };
 
-function stylesheet(colors: any) {
+function stylesheet(theme: AppTheme) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
-    },
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-    },
-    headerTitle: {
-      fontSize: 34,
-      fontWeight: "bold",
-      color: colors.text,
+      backgroundColor: theme.colors.background,
     },
     listContainer: {
-      paddingHorizontal: 20,
+      paddingHorizontal: 16,
+      paddingBottom: 80,
     },
     sectionHeader: {
-      fontSize: 22,
       fontWeight: "bold",
-      color: colors.text,
       marginTop: 20,
       marginBottom: 10,
-      backgroundColor: colors.background,
+      paddingHorizontal: 4,
+      backgroundColor: theme.colors.background,
     },
     emptyContainer: {
       flex: 1,
@@ -141,14 +126,16 @@ function stylesheet(colors: any) {
       alignItems: "center",
     },
     emptyText: {
-      fontSize: 20,
       fontWeight: "bold",
-      color: colors.text,
     },
     emptySubText: {
-      fontSize: 16,
-      color: colors.lightText,
       marginTop: 10,
+    },
+    fab: {
+      position: "absolute",
+      margin: 16,
+      right: 0,
+      bottom: 0,
     },
   });
 }
