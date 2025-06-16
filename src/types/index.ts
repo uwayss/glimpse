@@ -4,7 +4,8 @@ import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { NavigatorScreenParams } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 
-// --- Types ---
+export type EntryCategory = "Personal" | "Travel" | "Food" | "Work";
+
 export type Entry = {
   id: string;
   date?: string;
@@ -13,7 +14,9 @@ export type Entry = {
   content?: string;
   icon?: keyof typeof Ionicons.glyphMap;
   iconColor?: string;
-  imageUri?: string | null; // <-- ADD THIS
+  imageUri?: string | null;
+  location?: string | null;
+  category?: EntryCategory;
 };
 
 export type DayEntries = {
@@ -28,8 +31,6 @@ export type SearchResult = {
   icon: keyof typeof Ionicons.glyphMap;
   iconColor: string;
 };
-
-// --- NAVIGATION TYPES ---
 
 export type BottomTabParamList = {
   GlimpseHome: undefined;
@@ -49,6 +50,7 @@ export type RootStackParamList = {
   Settings: undefined;
   EditProfile: undefined;
   Notifications: undefined;
+  ViewEntry: { entryId: string };
 };
 
 export type RootStackNavigationProp = StackNavigationProp<RootStackParamList>;

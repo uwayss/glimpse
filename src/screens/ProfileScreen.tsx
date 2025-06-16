@@ -87,7 +87,9 @@ const StatBox = ({
   return (
     <View style={styles.statBox}>
       <ThemedText style={styles.statValue}>{value}</ThemedText>
-      <ThemedText style={styles.statLabel}>{label}</ThemedText>
+      <ThemedText style={[styles.statLabel, { color: colors.lightText }]}>
+        {label}
+      </ThemedText>
     </View>
   );
 };
@@ -101,11 +103,17 @@ const ProfileScreen = () => {
   const stats = useMemo(() => {
     const allDates = entries.map((e) => e.date).filter((d): d is string => !!d);
     const uniqueDaysCount = new Set(allDates).size;
+    const totalEntries = entries.length;
+
+    const avgEntriesPerDay: number =
+      uniqueDaysCount > 0 ? totalEntries / uniqueDaysCount : 0;
+
     return {
-      totalEntries: entries.length,
+      totalEntries: totalEntries,
       streak: getStreak(allDates),
       mostActiveDay: getMostActiveDay(allDates),
       uniqueDays: uniqueDaysCount,
+      avgEntriesPerDay: avgEntriesPerDay,
     };
   }, [entries]);
 
@@ -119,11 +127,7 @@ const ProfileScreen = () => {
       </SafeAreaView>
     );
   }
-  const totalEntries = stats.totalEntries;
-  const streak = stats.streak;
-  const uniqueDays = stats.uniqueDays;
-  const avgEntriesPerDay = totalEntries / uniqueDays;
-  const mostActiveDay = stats.mostActiveDay;
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
@@ -160,9 +164,9 @@ const ProfileScreen = () => {
         </View>
 
         <View style={styles.statsRow}>
-          <StatBox value={totalEntries} label="Entries" />
-          <StatBox value={streak} label="Streak" />
-          <StatBox value={uniqueDays} label="Days" />
+          <StatBox value={stats.totalEntries} label="Entries" />
+          <StatBox value={stats.streak} label="Streak" />
+          <StatBox value={stats.uniqueDays} label="Days" />
         </View>
 
         <View style={styles.statsSection}>
@@ -173,7 +177,9 @@ const ProfileScreen = () => {
                 Avg entries / day
               </ThemedText>
               <ThemedText style={styles.largeStatValue}>
-                {avgEntriesPerDay ? avgEntriesPerDay.toFixed(2) : "0"}
+                {stats.avgEntriesPerDay !== 0
+                  ? stats.avgEntriesPerDay.toFixed(2)
+                  : "0"}
               </ThemedText>
             </View>
             <View style={styles.largeStatBox}>
@@ -181,7 +187,7 @@ const ProfileScreen = () => {
                 Most active day
               </ThemedText>
               <ThemedText style={styles.largeStatValue}>
-                {mostActiveDay ? mostActiveDay : "0"}
+                {stats.mostActiveDay}
               </ThemedText>
             </View>
           </View>
@@ -240,7 +246,7 @@ function stylesheet(colors: any) {
       width: "30%",
     },
     statValue: { fontSize: 22, fontWeight: "bold" },
-    statLabel: { fontSize: 14, color: colors.lightText, marginTop: 5 },
+    statLabel: { fontSize: 14, marginTop: 5 },
     statsSection: { padding: 20, marginTop: 20 },
     statsTitle: { fontSize: 22, fontWeight: "bold", marginBottom: 15 },
     statsGrid: { flexDirection: "row", justifyContent: "space-between" },
@@ -255,7 +261,6 @@ function stylesheet(colors: any) {
     },
     largeStatLabel: {
       fontSize: 14,
-      color: colors.lightText,
       textAlign: "center",
     },
     largeStatValue: { fontSize: 28, fontWeight: "bold", marginTop: 10 },

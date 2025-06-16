@@ -12,7 +12,8 @@ import SettingsScreen from "../screens/SettingsScreen";
 import EditProfileScreen from "../screens/EditProfileScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 import OnboardingScreen from "../screens/OnboardingScreen";
-import { ActivityIndicator, View } from "react-native";
+import ViewEntryScreen from "../screens/ViewEntryScreen";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -21,14 +22,9 @@ const AppNavigator = () => {
   const { profile, isLoading } = useProfile();
 
   if (isLoading) {
+    const styles = stylesheet(colors);
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          backgroundColor: colors.background,
-        }}
-      >
+      <View style={styles.container}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -51,35 +47,64 @@ const AppNavigator = () => {
             <Stack.Screen
               name="Main"
               component={BottomTabNavigator}
-              options={{ headerShown: false }}
+              options={{
+                headerShown: false,
+              }}
             />
             <Stack.Screen
               name="NewEntry"
               component={NewEntryScreen}
-              options={{ presentation: "modal", headerShown: false }}
+              options={{
+                presentation: "modal",
+                headerShown: false,
+              }}
             />
             <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen
               name="EditProfile"
               component={EditProfileScreen}
-              options={{ title: "Edit Profile", presentation: "modal" }}
+              options={{
+                title: "Edit Profile",
+                presentation: "modal",
+              }}
             />
             <Stack.Screen
               name="Notifications"
               component={NotificationsScreen}
-              options={{ title: "Notifications" }}
+              options={{
+                title: "Notifications",
+              }}
+            />
+            <Stack.Screen
+              name="ViewEntry"
+              component={ViewEntryScreen}
+              options={{
+                title: "",
+                headerShown: false,
+                presentation: "modal",
+              }}
             />
           </>
         ) : (
           <Stack.Screen
             name="Onboarding"
             component={OnboardingScreen}
-            options={{ headerShown: false }}
+            options={{
+              headerShown: false,
+            }}
           />
         )}
       </Stack.Navigator>
     </NavigationContainer>
   );
 };
-
+function stylesheet(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: "center",
+      backgroundColor: colors.background,
+    },
+  });
+}
 export default AppNavigator;

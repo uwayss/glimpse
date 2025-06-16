@@ -7,19 +7,29 @@ import React, {
   useEffect,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Entry } from "@/types";
-import Colors from "@/constants/Colors";
+import { Entry, EntryCategory } from "@/types";
+import { Ionicons } from "@expo/vector-icons";
+
+// We import the static colors here to avoid a dependency cycle with ThemeContext
+const LightColors = {
+  primary: "#007AFF",
+};
 
 const STORAGE_KEY = "@glimpse_entries";
 
+interface AddEntryPayload {
+  title: string;
+  content: string;
+  imageUri?: string | null;
+  location?: string | null;
+  category?: EntryCategory;
+}
+
 interface EntryContextType {
   entries: Entry[];
-  addEntry: (
-    entry: Omit<Entry, "id" | "date" | "time" | "imageUri">,
-    imageUri?: string | null
-  ) => void;
+  addEntry: (payload: AddEntryPayload) => void;
   deleteEntry: (id: string) => void;
-  clearAllEntries: () => void; // <-- ADD THIS
+  clearAllEntries: () => void;
   isLoading: boolean;
 }
 
@@ -27,7 +37,7 @@ const EntryContext = createContext<EntryContextType>({
   entries: [],
   addEntry: () => {},
   deleteEntry: () => {},
-  clearAllEntries: () => {}, // <-- ADD DEFAULT
+  clearAllEntries: () => {},
   isLoading: true,
 });
 
@@ -61,10 +71,9 @@ export const EntryProvider = ({ children }: PropsWithChildren) => {
     loadEntries();
   }, []);
 
-  const addEntry = async (
-    newEntryData: Omit<Entry, "id" | "date" | "time" | "imageUri">,
-    imageUri: string | null = null
-  ) => {
+  const addEntry = async (payload: AddEntryPayload) => {
+    const category = payload.category || "Personal";
+
     const newEntry: Entry = {
       id: Date.now().toString(),
       date: new Date().toISOString().split("T")[0],
@@ -72,15 +81,33 @@ export const EntryProvider = ({ children }: PropsWithChildren) => {
         hour: "2-digit",
         minute: "2-digit",
       }),
-      ...newEntryData,
-      imageUri: imageUri, // Add the image URI to the entry
-      icon: newEntryData.icon || "book-outline",
-      iconColor: newEntryData.iconColor || Colors.primary,
+      title: payload.title,
+      content: payload.content,
+      imageUri: payload.imageUri || null,
+      location: payload.location || null,
+      category: category,
+      icon: getIconForCategory(category),
+      iconColor: LightColors.primary,
     };
 
     const updatedEntries = [newEntry, ...entries];
     setEntries(updatedEntries);
     await saveEntriesToStorage(updatedEntries);
+  };
+
+  const getIconForCategory = (
+    category: EntryCategory
+  ): keyof typeof Ionicons.glyphMap => {
+    switch (category) {
+      case "Travel":
+        return "airplane-outline";
+      case "Food":
+        return "restaurant-outline";
+      case "Work":
+        return "briefcase-outline";
+      default:
+        return "book-outline";
+    }
   };
 
   const deleteEntry = async (id: string) => {
@@ -89,11 +116,10 @@ export const EntryProvider = ({ children }: PropsWithChildren) => {
     await saveEntriesToStorage(updatedEntries);
   };
 
-  // --- NEW FUNCTION TO CLEAR DATA ---
   const clearAllEntries = async () => {
     try {
-      setEntries([]); // Clear state
-      await AsyncStorage.removeItem(STORAGE_KEY); // Remove from storage
+      setEntries([]);
+      await AsyncStorage.removeItem(STORAGE_KEY);
     } catch (e) {
       console.error("Failed to clear entries from storage", e);
     }

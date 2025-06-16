@@ -13,24 +13,35 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import { useEntries } from "@/context/EntryContext";
 import ThemedText from "@/components/ThemedText";
+import { EntryCategory } from "@/types";
+
+type Filter = "All" | EntryCategory;
 
 const SearchScreen = () => {
   const { entries, isLoading } = useEntries();
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState<Filter>("All");
   const { colors } = useTheme();
 
   const filteredEntries = useMemo(() => {
-    if (!searchQuery.trim()) {
-      // If search is empty, show the 10 most recent entries
-      return entries.slice(0, 10);
+    let results = entries;
+
+    // 1. Filter by category
+    if (activeFilter !== "All") {
+      results = results.filter((entry) => entry.category === activeFilter);
     }
-    // Otherwise, filter by title and content
-    return entries.filter(
-      (entry) =>
-        entry.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        entry.content?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery, entries]);
+
+    // 2. Filter by search query
+    if (searchQuery.trim()) {
+      results = results.filter(
+        (entry) =>
+          entry.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          entry.content?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    return results;
+  }, [searchQuery, entries, activeFilter]);
 
   const styles = stylesheet(colors);
 
@@ -41,6 +52,24 @@ const SearchScreen = () => {
       </SafeAreaView>
     );
   }
+
+  const FilterButton = ({ filter }: { filter: Filter }) => (
+    <TouchableOpacity
+      style={[
+        styles.filterButton,
+        activeFilter === filter && styles.activeFilter,
+      ]}
+      onPress={() => setActiveFilter(filter)}
+    >
+      <ThemedText
+        style={
+          activeFilter === filter ? styles.activeFilterText : styles.filterText
+        }
+      >
+        {filter}
+      </ThemedText>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -60,8 +89,17 @@ const SearchScreen = () => {
         />
       </View>
 
+      <View style={styles.filterContainer}>
+        <FilterButton filter="All" />
+        <FilterButton filter="Travel" />
+        <FilterButton filter="Food" />
+        <FilterButton filter="Work" />
+      </View>
+
       <ThemedText style={styles.recentTitle}>
-        {searchQuery.trim() ? "Search Results" : "Recent Entries"}
+        {searchQuery.trim() || activeFilter !== "All"
+          ? "Results"
+          : "Recent Entries"}
       </ThemedText>
 
       <FlatList
@@ -70,7 +108,10 @@ const SearchScreen = () => {
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.recentItem}>
             <View
-              style={[styles.recentIcon, { backgroundColor: item.iconColor }]}
+              style={[
+                styles.recentIcon,
+                { backgroundColor: item.iconColor || colors.primary },
+              ]}
             >
               <Ionicons
                 name={item.icon || "book-outline"}
@@ -97,9 +138,9 @@ const SearchScreen = () => {
     </SafeAreaView>
   );
 };
-
+// Stylesheet needs to be updated with filter button styles
 function stylesheet(colors: any) {
-  const styles = StyleSheet.create({
+  return StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.background,
@@ -121,10 +162,26 @@ function stylesheet(colors: any) {
       fontSize: 16,
       color: colors.text,
     },
+    filterContainer: {
+      flexDirection: "row",
+      justifyContent: "flex-start",
+      gap: 10,
+      marginTop: 20,
+    },
+    filterButton: {
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 20,
+      backgroundColor: colors.card,
+    },
+    activeFilter: { backgroundColor: colors.primary },
+    filterText: {},
+    activeFilterText: { color: "white" },
     recentTitle: {
       fontSize: 22,
       fontWeight: "bold",
       marginVertical: 20,
+      color: colors.text,
     },
     recentItem: {
       flexDirection: "row",
@@ -140,19 +197,14 @@ function stylesheet(colors: any) {
       alignItems: "center",
     },
     recentItemTitle: { fontSize: 16, fontWeight: "500" },
-    recentItemDate: { color: colors.lightText, marginTop: 5 },
+    recentItemDate: { marginTop: 5 },
     noResultsContainer: {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
       marginTop: 50,
     },
-    noResultsText: {
-      fontSize: 16,
-      color: colors.lightText,
-    },
+    noResultsText: { fontSize: 16, color: colors.lightText },
   });
-  return styles;
 }
-
 export default SearchScreen;
