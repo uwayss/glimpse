@@ -8,12 +8,8 @@ import TimelineEntryCard, {
 } from "../components/TimelineEntryCard";
 import EntryCard from "../components/EntryCard";
 import { useEntries } from "@/context/EntryContext";
-import {
-  Appbar,
-  SegmentedButtons,
-  Text,
-  ActivityIndicator,
-} from "react-native-paper";
+import { SegmentedButtons, Text, ActivityIndicator } from "react-native-paper";
+import Header from "@/components/Header";
 
 const PastEntriesScreen = () => {
   const { entries, isLoading } = useEntries();
@@ -140,12 +136,7 @@ const PastEntriesScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Appbar.Header
-        mode="medium"
-        style={{ backgroundColor: theme.colors.background }}
-      >
-        <Appbar.Content title="Past Entries" />
-      </Appbar.Header>
+      <Header title="Past Entries" alignTitle="left" isHeadline />
       <View style={styles.switcherContainer}>
         <SegmentedButtons
           value={activeView}

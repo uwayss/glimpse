@@ -5,7 +5,8 @@ import { AppTheme, useAppTheme } from "../context/ThemeContext";
 import EntryCard from "../components/EntryCard";
 import { DayEntries, RootStackNavigationProp, Entry } from "../types";
 import { useEntries } from "@/context/EntryContext";
-import { Appbar, Text, FAB, ActivityIndicator } from "react-native-paper";
+import { Text, FAB, ActivityIndicator } from "react-native-paper";
+import { useProfile } from "@/context/ProfileContext";
 import Header from "@/components/Header";
 
 const groupEntriesByDate = (entries: Entry[]): DayEntries[] => {
@@ -40,6 +41,7 @@ const groupEntriesByDate = (entries: Entry[]): DayEntries[] => {
 const GlimpseScreen = () => {
   const navigation = useNavigation<RootStackNavigationProp>();
   const { entries, isLoading } = useEntries();
+  const { profile } = useProfile();
   const theme = useAppTheme();
   const sectionedData = useMemo(() => groupEntriesByDate(entries), [entries]);
 
@@ -85,18 +87,10 @@ const GlimpseScreen = () => {
       </View>
     );
   };
-
+  const userWelcomeText = `Hello, ${profile?.name}`;
   return (
     <View style={styles.container}>
-      {/* <Header title="Glimpse" alignTitle="left" /> */}
-      <Appbar.Header
-        mode="medium"
-        style={{
-          backgroundColor: theme.colors.background,
-        }}
-      >
-        <Appbar.Content title="Glimpse" />
-      </Appbar.Header>
+      <Header title={userWelcomeText} alignTitle="left" isHeadline />
       {renderContent()}
       <FAB
         icon="plus"

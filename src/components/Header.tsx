@@ -6,21 +6,7 @@ import { Text, Icon } from "react-native-paper";
 type ActionItem = string | string[];
 type ActionHandler = (() => void) | (() => void)[];
 
-/**
- * A fixed Header component for React Native applications.
- * It supports multiple left/right actions (icon/text) and a centered title.
- */
-const Header = ({
-  title,
-  leftIcon,
-  leftText,
-  leftAction,
-  rightIcon,
-  rightText,
-  rightAction,
-  alignTitle = "center",
-  bordered = false,
-}: {
+interface HeaderProps {
   title?: string;
   leftIcon?: ActionItem;
   leftText?: ActionItem;
@@ -30,100 +16,134 @@ const Header = ({
   rightAction?: ActionHandler;
   alignTitle?: "left" | "center" | "right";
   bordered?: boolean;
-}) => {
+  isHeadline?: boolean;
+  isBold?: boolean;
+}
+
+/**
+ * A fixed Header component for React Native applications.
+ * It supports multiple left/right actions (icon/text) and a centered title.
+ */
+function Header({
+  title,
+  leftIcon,
+  leftText,
+  leftAction,
+  rightIcon,
+  rightText,
+  rightAction,
+  alignTitle = "center",
+  bordered = false,
+  isHeadline = false,
+  isBold = false,
+}: HeaderProps) {
   const theme = useAppTheme();
   const styles = stylesheet(theme, alignTitle);
 
   const hasLeftElements = leftIcon || leftText;
   const hasRightElements = rightIcon || rightText;
-
-  /**
-   * Renders action elements (icons and texts) for one side of the header.
-   */
-  const renderActionElements = (
-    icons?: ActionItem,
-    texts?: ActionItem,
-    actions?: ActionHandler
-  ) => {
-    const elements: React.ReactNode[] = [];
-
-    const normalizedTexts = texts
-      ? Array.isArray(texts)
-        ? texts
-        : [texts]
-      : [];
-    const normalizedIcons = icons
-      ? Array.isArray(icons)
-        ? icons
-        : [icons]
-      : [];
-    const normalizedActions = actions
-      ? Array.isArray(actions)
-        ? actions
-        : [actions]
-      : [];
-
-    let actionIndex = 0;
-
-    normalizedTexts.forEach((text, index) => {
-      elements.push(
-        <TouchableOpacity
-          key={`text-${text}-${index}`}
-          onPress={normalizedActions[actionIndex]}
-          style={styles.button}
-        >
-          <Text style={styles.buttonText} variant="labelLarge">
-            {text}
-          </Text>
-        </TouchableOpacity>
-      );
-      actionIndex++;
-    });
-
-    normalizedIcons.forEach((icon, index) => {
-      elements.push(
-        <TouchableOpacity
-          key={`icon-${icon}-${index}`}
-          onPress={normalizedActions[actionIndex]}
-        >
-          <Icon source={icon} size={24} color={theme.colors.onSurface} />
-        </TouchableOpacity>
-      );
-      actionIndex++;
-    });
-
-    return elements;
-  };
-
   return (
     <View
       style={[
         styles.headerContainer,
         bordered ? styles.borderedHeaderContainer : undefined,
+        isHeadline ? { marginTop: 70, marginBottom: 15 } : undefined,
       ]}
     >
-      {hasLeftElements ? (
+      {hasLeftElements && (
         <View style={styles.leftContainer}>
-          {renderActionElements(leftIcon, leftText, leftAction)}
+          <ActionElements
+            icons={leftIcon}
+            texts={leftText}
+            actions={leftAction}
+            styles={styles}
+            theme={theme}
+          />
         </View>
-      ) : null}
+      )}
 
       <View style={styles.titleContainer}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text
+          style={[styles.title, { fontWeight: isBold ? "bold" : "normal" }]}
+          numberOfLines={1}
+          variant={isHeadline ? "headlineSmall" : "titleLarge"}
+        >
           {title}
         </Text>
       </View>
 
-      {hasRightElements ? (
+      {hasRightElements && (
         <View style={styles.rightContainer}>
-          {renderActionElements(rightIcon, rightText, rightAction)}
+          <ActionElements
+            icons={rightIcon}
+            texts={rightText}
+            actions={rightAction}
+            styles={styles}
+            theme={theme}
+          />
         </View>
-      ) : null}
+      )}
     </View>
   );
-};
+}
 
-// Pass alignTitle to stylesheet function
+interface ActionElementsProps {
+  icons?: ActionItem;
+  texts?: ActionItem;
+  actions?: ActionHandler;
+  styles: ReturnType<typeof stylesheet>;
+  theme: AppTheme;
+}
+
+function ActionElements({
+  icons,
+  texts,
+  actions,
+  styles,
+  theme,
+}: ActionElementsProps) {
+  const elements: React.ReactNode[] = [];
+
+  const normalizedTexts = texts ? (Array.isArray(texts) ? texts : [texts]) : [];
+  const normalizedIcons = icons ? (Array.isArray(icons) ? icons : [icons]) : [];
+  const normalizedActions = actions
+    ? Array.isArray(actions)
+      ? actions
+      : [actions]
+    : [];
+
+  let actionIndex = 0;
+
+  normalizedTexts.forEach((text, index) => {
+    elements.push(
+      <TouchableOpacity
+        key={`text-${text}-${index}`}
+        onPress={normalizedActions[actionIndex]}
+        style={styles.button}
+      >
+        <Text style={styles.buttonText} variant="labelLarge">
+          {text}
+        </Text>
+      </TouchableOpacity>
+    );
+    actionIndex++;
+  });
+
+  normalizedIcons.forEach((icon, index) => {
+    elements.push(
+      <TouchableOpacity
+        key={`icon-${icon}-${index}`}
+        onPress={normalizedActions[actionIndex]}
+      >
+        <Icon source={icon} size={24} color={theme.colors.onSurface} />
+      </TouchableOpacity>
+    );
+    actionIndex++;
+  });
+
+  return <>{elements}</>;
+}
+
 function stylesheet(theme: AppTheme, alignTitle: "left" | "center" | "right") {
   const titleAlign: { [key: string]: "left" | "center" | "right" } = {
     left: "left",
@@ -134,7 +154,6 @@ function stylesheet(theme: AppTheme, alignTitle: "left" | "center" | "right") {
   return StyleSheet.create({
     headerContainer: {
       flexDirection: "row",
-
       alignItems: "center",
       paddingHorizontal: 15,
       height: 60,
@@ -150,7 +169,7 @@ function stylesheet(theme: AppTheme, alignTitle: "left" | "center" | "right") {
       elevation: 3,
     },
     leftContainer: {
-      flex: 1,
+      marginRight: 16,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "flex-start",
@@ -169,8 +188,6 @@ function stylesheet(theme: AppTheme, alignTitle: "left" | "center" | "right") {
       gap: 10,
     },
     title: {
-      fontSize: 18,
-      fontWeight: "bold",
       color: theme.colors.onSurface,
       textAlign: titleAlign[alignTitle],
     },
