@@ -128,8 +128,8 @@ const ProfileScreen = () => {
     <SafeAreaView style={styles.container} edges={["top"]}>
       <Header
         title="Profile"
-        rightIcons={["pencil-outline", "cog-outline"]}
-        rightActions={[
+        rightIcon={["pencil-outline", "cog-outline"]}
+        rightAction={[
           () => navigation.navigate("EditProfile"),
           () => navigation.navigate("Settings"),
         ]}

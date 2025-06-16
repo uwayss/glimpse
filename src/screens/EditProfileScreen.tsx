@@ -51,8 +51,8 @@ const EditProfileScreen = () => {
         title="Edit Profile"
         leftIcon="arrow-left"
         leftAction={() => navigation.goBack()}
-        rightTexts={["Save"]}
-        rightActions={[handleSave]}
+        rightText="Save"
+        rightAction={handleSave}
         alignTitle="left"
       />
       <Banner

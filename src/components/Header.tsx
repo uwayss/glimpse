@@ -3,70 +3,95 @@ import React from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { Text, Icon } from "react-native-paper";
 
+type ActionItem = string | string[];
+type ActionHandler = (() => void) | (() => void)[];
+
 /**
  * A fixed Header component for React Native applications.
- * It supports left actions (icon/text), a centered title,
- * and multiple right actions (icons/text).
+ * It supports multiple left/right actions (icon/text) and a centered title.
  */
 const Header = ({
   title,
   leftIcon,
   leftText,
   leftAction,
-  rightIcons,
-  rightTexts,
-  rightActions,
+  rightIcon,
+  rightText,
+  rightAction,
   alignTitle = "center",
   bordered = false,
 }: {
   title?: string;
-  leftIcon?: string;
-  leftText?: string;
-  leftAction?: () => void;
-  rightIcons?: string[];
-  rightTexts?: string[];
-  rightActions?: (() => void)[];
+  leftIcon?: ActionItem;
+  leftText?: ActionItem;
+  leftAction?: ActionHandler;
+  rightIcon?: ActionItem;
+  rightText?: ActionItem;
+  rightAction?: ActionHandler;
   alignTitle?: "left" | "center" | "right";
   bordered?: boolean;
 }) => {
   const theme = useAppTheme();
   const styles = stylesheet(theme, alignTitle);
 
-  const renderRightElements = () => {
+  const hasLeftElements = leftIcon || leftText;
+  const hasRightElements = rightIcon || rightText;
+
+  /**
+   * Renders action elements (icons and texts) for one side of the header.
+   */
+  const renderActionElements = (
+    icons?: ActionItem,
+    texts?: ActionItem,
+    actions?: ActionHandler
+  ) => {
     const elements: React.ReactNode[] = [];
 
-    if (rightTexts && rightActions) {
-      rightTexts.forEach((text, index) => {
-        elements.push(
-          <TouchableOpacity
-            key={`right-text-${index}`}
-            onPress={rightActions[index]}
-            style={styles.button}
-          >
-            <Text style={styles.buttonText} variant="labelLarge">
-              {text}
-            </Text>
-          </TouchableOpacity>
-        );
-      });
-    }
+    const normalizedTexts = texts
+      ? Array.isArray(texts)
+        ? texts
+        : [texts]
+      : [];
+    const normalizedIcons = icons
+      ? Array.isArray(icons)
+        ? icons
+        : [icons]
+      : [];
+    const normalizedActions = actions
+      ? Array.isArray(actions)
+        ? actions
+        : [actions]
+      : [];
 
-    if (rightIcons && rightActions) {
-      rightIcons.forEach((icon, index) => {
-        if (rightActions[rightTexts ? rightTexts.length + index : index]) {
-          elements.push(
-            <TouchableOpacity
-              key={`right-icon-${index}`}
-              onPress={
-                rightActions[rightTexts ? rightTexts.length + index : index]
-              }
-            >
-              <Icon source={icon} size={24} color={theme.colors.onSurface} />
-            </TouchableOpacity>
-          );
-        }
-      });
-    }
+    let actionIndex = 0;
+
+    normalizedTexts.forEach((text, index) => {
+      elements.push(
+        <TouchableOpacity
+          key={`text-${text}-${index}`}
+          onPress={normalizedActions[actionIndex]}
+          style={styles.button}
+        >
+          <Text style={styles.buttonText} variant="labelLarge">
+            {text}
+          </Text>
+        </TouchableOpacity>
+      );
+      actionIndex++;
+    });
+
+    normalizedIcons.forEach((icon, index) => {
+      elements.push(
+        <TouchableOpacity
+          key={`icon-${icon}-${index}`}
+          onPress={normalizedActions[actionIndex]}
+        >
+          <Icon source={icon} size={24} color={theme.colors.onSurface} />
+        </TouchableOpacity>
+      );
+      actionIndex++;
+    });
+
     return elements;
   };
 
@@ -77,32 +102,23 @@ const Header = ({
         bordered ? styles.borderedHeaderContainer : undefined,
       ]}
     >
-      {leftIcon || leftText ? (
+      {hasLeftElements ? (
         <View style={styles.leftContainer}>
-          {leftText && (
-            <TouchableOpacity onPress={leftAction} style={styles.button}>
-              <Text style={styles.buttonText} variant="labelLarge">
-                {leftText}
-              </Text>
-            </TouchableOpacity>
-          )}
-          {leftIcon && (
-            <TouchableOpacity onPress={leftAction}>
-              <Icon
-                source={leftIcon}
-                size={24}
-                color={theme.colors.onSurface}
-              />
-            </TouchableOpacity>
-          )}
+          {renderActionElements(leftIcon, leftText, leftAction)}
         </View>
       ) : null}
 
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.title} numberOfLines={1}>
+          {title}
+        </Text>
       </View>
 
-      <View style={styles.rightContainer}>{renderRightElements()}</View>
+      {hasRightElements ? (
+        <View style={styles.rightContainer}>
+          {renderActionElements(rightIcon, rightText, rightAction)}
+        </View>
+      ) : null}
     </View>
   );
 };
@@ -115,10 +131,10 @@ function stylesheet(theme: AppTheme, alignTitle: "left" | "center" | "right") {
     right: "right",
   };
 
-  const styles = StyleSheet.create({
+  return StyleSheet.create({
     headerContainer: {
       flexDirection: "row",
-      justifyContent: "space-between",
+
       alignItems: "center",
       paddingHorizontal: 15,
       height: 60,
@@ -134,14 +150,16 @@ function stylesheet(theme: AppTheme, alignTitle: "left" | "center" | "right") {
       elevation: 3,
     },
     leftContainer: {
-      marginRight: 16,
+      flex: 1,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "flex-start",
+      gap: 10,
     },
     titleContainer: {
       flex: 2,
       justifyContent: "center",
+      marginHorizontal: 5,
     },
     rightContainer: {
       flex: 1,
@@ -166,7 +184,6 @@ function stylesheet(theme: AppTheme, alignTitle: "left" | "center" | "right") {
       color: theme.colors.onPrimary,
     },
   });
-  return styles;
 }
 
 export default Header;

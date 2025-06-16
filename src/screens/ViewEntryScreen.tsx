@@ -59,8 +59,8 @@ const ViewEntryScreen = () => {
           alignTitle="left"
           leftIcon="arrow-left"
           leftAction={() => navigation.goBack()}
-          rightIcons={["trash-can-outline"]}
-          rightActions={[showDeleteDialog]}
+          rightIcon="trash-can-outline"
+          rightAction={showDeleteDialog}
         />
         <ScrollView>
           {entry.imageUri && (

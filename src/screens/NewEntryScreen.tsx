@@ -132,8 +132,9 @@ const NewEntryScreen = () => {
         title="New Entry"
         leftIcon="close"
         leftAction={() => navigation.goBack()}
-        rightTexts={["Save"]}
-        rightActions={[handleSave]}
+        rightText="Save"
+        rightAction={handleSave}
+        alignTitle="left"
       />
 
       <ScrollView
