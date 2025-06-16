@@ -13,22 +13,26 @@ const PROFILE_STORAGE_KEY = "@glimpse_profile";
 interface Profile {
   name: string;
   avatarUri: string | null;
+  hasOnboarded: boolean;
 }
 
 interface ProfileContextType {
   profile: Profile | null;
   updateProfile: (newProfileData: Partial<Profile>) => void;
+  clearProfileData: () => void; // <-- ADD THIS
   isLoading: boolean;
 }
 
 const defaultProfile: Profile = {
   name: "Glimpse User",
   avatarUri: null,
+  hasOnboarded: false,
 };
 
 const ProfileContext = createContext<ProfileContextType>({
   profile: null,
   updateProfile: () => {},
+  clearProfileData: () => {}, // <-- ADD DEFAULT
   isLoading: true,
 });
 
@@ -61,9 +65,11 @@ export const ProfileProvider = ({ children }: PropsWithChildren) => {
   }, []);
 
   const updateProfile = async (newProfileData: Partial<Profile>) => {
-    if (!profile) return;
+    if (!profile && !newProfileData.hasOnboarded) return;
+
     try {
-      const updatedProfile = { ...profile, ...newProfileData };
+      const currentProfile = profile || defaultProfile;
+      const updatedProfile = { ...currentProfile, ...newProfileData };
       setProfile(updatedProfile);
       const jsonValue = JSON.stringify(updatedProfile);
       await AsyncStorage.setItem(PROFILE_STORAGE_KEY, jsonValue);
@@ -72,8 +78,25 @@ export const ProfileProvider = ({ children }: PropsWithChildren) => {
     }
   };
 
+  // --- NEW FUNCTION TO CLEAR PROFILE AND TRIGGER ONBOARDING ---
+  const clearProfileData = async () => {
+    try {
+      // Set the state back to the initial default (with hasOnboarded: false)
+      setProfile(defaultProfile);
+      // Save this default state to storage, effectively resetting the user
+      await AsyncStorage.setItem(
+        PROFILE_STORAGE_KEY,
+        JSON.stringify(defaultProfile)
+      );
+    } catch (e) {
+      console.error("Failed to clear profile from storage", e);
+    }
+  };
+
   return (
-    <ProfileContext.Provider value={{ profile, updateProfile, isLoading }}>
+    <ProfileContext.Provider
+      value={{ profile, updateProfile, clearProfileData, isLoading }}
+    >
       {children}
     </ProfileContext.Provider>
   );

@@ -43,6 +43,7 @@ export type RootBottomTabNavigationProp =
   BottomTabNavigationProp<BottomTabParamList>;
 
 export type RootStackParamList = {
+  Onboarding: undefined;
   Main: NavigatorScreenParams<BottomTabParamList>;
   NewEntry: undefined;
   Settings: undefined;

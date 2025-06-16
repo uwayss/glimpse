@@ -17,7 +17,6 @@ import { useEntries } from "@/context/EntryContext";
 import { useProfile } from "@/context/ProfileContext";
 import ThemedText from "@/components/ThemedText";
 
-// --- NO CHANGES TO HELPER FUNCTIONS ---
 const getStreak = (dates: string[]): number => {
   if (dates.length === 0) return 0;
   const uniqueDates = [...new Set(dates)].sort(
@@ -53,7 +52,7 @@ const getStreak = (dates: string[]): number => {
 };
 
 const getMostActiveDay = (dates: string[]): string => {
-  if (dates.length === 0) return "N/A";
+  if (dates.length === 0) return "0";
   const dayNames = [
     "Sunday",
     "Monday",
@@ -120,7 +119,11 @@ const ProfileScreen = () => {
       </SafeAreaView>
     );
   }
-
+  const totalEntries = stats.totalEntries;
+  const streak = stats.streak;
+  const uniqueDays = stats.uniqueDays;
+  const avgEntriesPerDay = totalEntries / uniqueDays;
+  const mostActiveDay = stats.mostActiveDay;
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
@@ -157,9 +160,9 @@ const ProfileScreen = () => {
         </View>
 
         <View style={styles.statsRow}>
-          <StatBox value={stats.totalEntries} label="Entries" />
-          <StatBox value={stats.streak} label="Streak" />
-          <StatBox value={stats.uniqueDays} label="Days" />
+          <StatBox value={totalEntries} label="Entries" />
+          <StatBox value={streak} label="Streak" />
+          <StatBox value={uniqueDays} label="Days" />
         </View>
 
         <View style={styles.statsSection}>
@@ -170,7 +173,7 @@ const ProfileScreen = () => {
                 Avg entries / day
               </ThemedText>
               <ThemedText style={styles.largeStatValue}>
-                {stats.totalEntries / stats.streak}
+                {avgEntriesPerDay ? avgEntriesPerDay.toFixed(2) : "0"}
               </ThemedText>
             </View>
             <View style={styles.largeStatBox}>
@@ -178,7 +181,7 @@ const ProfileScreen = () => {
                 Most active day
               </ThemedText>
               <ThemedText style={styles.largeStatValue}>
-                {stats.mostActiveDay}
+                {mostActiveDay ? mostActiveDay : "0"}
               </ThemedText>
             </View>
           </View>

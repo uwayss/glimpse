@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Image,
   Alert,
   Linking,
 } from "react-native";
@@ -13,8 +14,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useProfile } from "@/context/ProfileContext";
+import { useEntries } from "@/context/EntryContext";
 import { RootStackNavigationProp } from "@/types";
-import { useTheme } from "@/context/ThemeContext"; // Use theme
+import { useTheme } from "@/context/ThemeContext";
 import ThemedText from "@/components/ThemedText";
 
 const SettingsItem = ({
@@ -35,9 +37,7 @@ const SettingsItem = ({
         >
           <Ionicons name={icon} size={20} color={colors.primary} />
         </View>
-        <ThemedText style={[styles.itemText, { color: colors.text }]}>
-          {name}
-        </ThemedText>
+        <ThemedText style={styles.itemText}>{name}</ThemedText>
       </View>
       <Ionicons
         name="chevron-forward-outline"
@@ -50,16 +50,41 @@ const SettingsItem = ({
 
 const SettingsScreen = () => {
   const navigation = useNavigation<RootStackNavigationProp>();
-  const { profile, isLoading: isLoadingProfile } = useProfile();
+  // --- CHANGE 1: Get clearProfileData from the hook ---
+  const {
+    profile,
+    isLoading: isLoadingProfile,
+    clearProfileData,
+  } = useProfile();
+  const { clearAllEntries } = useEntries();
   const { colors, setTheme } = useTheme();
 
   const handleLogout = () => {
-    /* ... (remains the same) ... */
+    Alert.alert(
+      "Log Out & Reset",
+      "This will erase all your entries and profile data from this device. This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Erase Everything",
+          style: "destructive",
+          onPress: async () => {
+            // --- CHANGE 2: Call the new context functions ---
+            await clearAllEntries();
+            await clearProfileData(); // This sets hasOnboarded to false
+
+            // --- CHANGE 3: Pop to the top of the stack ---
+            // This will automatically land on the Onboarding screen
+            // because AppNavigator will re-evaluate and see hasOnboarded is false.
+            navigation.popToTop();
+          },
+        },
+      ]
+    );
   };
 
   const handlePrivacy = () => {
-    // Replace with your own privacy policy URL
-    Linking.openURL("https://www.w3.org/TR/PNG/");
+    Linking.openURL("https://www.google.com/policies/privacy/");
   };
 
   const handleDisplay = () => {
@@ -71,20 +96,55 @@ const SettingsScreen = () => {
   };
 
   if (isLoadingProfile || !profile) {
-    return <ActivityIndicator style={{ flex: 1 }} color={colors.primary} />;
+    return (
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", backgroundColor: colors.background },
+        ]}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
   }
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.card }]}>
       <SafeAreaView>
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Account</ThemedText>
+          <ThemedText
+            style={[styles.sectionTitle, { color: colors.lightText }]}
+          >
+            Account
+          </ThemedText>
           <View style={[styles.card, { backgroundColor: colors.background }]}>
             <TouchableOpacity
               style={styles.userItem}
               onPress={() => navigation.navigate("EditProfile")}
             >
-              {/* ... (user avatar logic is the same) ... */}
+              {profile.avatarUri ? (
+                <Image
+                  source={{ uri: profile.avatarUri }}
+                  style={styles.userAvatar}
+                />
+              ) : (
+                <View
+                  style={[
+                    styles.userAvatar,
+                    styles.avatarPlaceholder,
+                    { backgroundColor: colors.card },
+                  ]}
+                >
+                  <Ionicons
+                    name="person-outline"
+                    size={24}
+                    color={colors.text}
+                  />
+                </View>
+              )}
+              <View>
+                <ThemedText style={styles.userName}>{profile.name}</ThemedText>
+              </View>
             </TouchableOpacity>
             <View
               style={[styles.divider, { backgroundColor: colors.border }]}
@@ -106,7 +166,11 @@ const SettingsScreen = () => {
         </View>
 
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Preferences</ThemedText>
+          <ThemedText
+            style={[styles.sectionTitle, { color: colors.lightText }]}
+          >
+            Preferences
+          </ThemedText>
           <View style={[styles.card, { backgroundColor: colors.background }]}>
             <SettingsItem
               icon="notifications-outline"
@@ -135,16 +199,15 @@ const SettingsScreen = () => {
   );
 };
 
-// --- UPDATE STYLES TO BE DYNAMIC ---
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  section: { marginBottom: 20 },
+  section: { marginBottom: 20, paddingHorizontal: 15 },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#6e6e72",
+    fontSize: 13,
+    fontWeight: "400",
     marginLeft: 16,
     marginBottom: 8,
+    textTransform: "uppercase",
   },
   card: { borderRadius: 10, overflow: "hidden" },
   item: {
@@ -169,7 +232,7 @@ const styles = StyleSheet.create({
   userName: { fontSize: 18, fontWeight: "500" },
   divider: { height: StyleSheet.hairlineWidth, marginLeft: 60 },
   logoutButton: {
-    marginHorizontal: 20,
+    marginHorizontal: 15,
     marginTop: 20,
     padding: 15,
     alignItems: "center",

@@ -2,18 +2,38 @@
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import { NavigationContainer } from "@react-navigation/native";
+import { useTheme } from "@/context/ThemeContext";
+import { useProfile } from "@/context/ProfileContext";
+import { RootStackParamList } from "../types";
+
 import BottomTabNavigator from "./BottomTabNavigator";
 import NewEntryScreen from "../screens/NewEntryScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import EditProfileScreen from "../screens/EditProfileScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
-import { RootStackParamList } from "../types";
-import { useTheme } from "../context/ThemeContext";
+import OnboardingScreen from "../screens/OnboardingScreen";
+import { ActivityIndicator, View } from "react-native";
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => {
   const { colors } = useTheme();
+  const { profile, isLoading } = useProfile();
+
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          backgroundColor: colors.background,
+        }}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator
@@ -26,33 +46,37 @@ const AppNavigator = () => {
           headerTintColor: colors.text,
         }}
       >
-        <Stack.Screen
-          name="Main"
-          component={BottomTabNavigator}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="NewEntry"
-          component={NewEntryScreen}
-          options={{ presentation: "modal", headerShown: false }}
-        />
-        <Stack.Screen name="Settings" component={SettingsScreen} />
-        <Stack.Screen
-          name="EditProfile"
-          component={EditProfileScreen}
-          options={{
-            title: "Edit Profile",
-            presentation: "modal", // Opens as a modal like NewEntry
-          }}
-        />
-        <Stack.Screen
-          name="Notifications"
-          component={NotificationsScreen}
-          options={{
-            title: "Notifications",
-            presentation: "modal", // Opens as a modal like NewEntry
-          }}
-        />
+        {profile?.hasOnboarded ? (
+          <>
+            <Stack.Screen
+              name="Main"
+              component={BottomTabNavigator}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="NewEntry"
+              component={NewEntryScreen}
+              options={{ presentation: "modal", headerShown: false }}
+            />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen
+              name="EditProfile"
+              component={EditProfileScreen}
+              options={{ title: "Edit Profile", presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="Notifications"
+              component={NotificationsScreen}
+              options={{ title: "Notifications" }}
+            />
+          </>
+        ) : (
+          <Stack.Screen
+            name="Onboarding"
+            component={OnboardingScreen}
+            options={{ headerShown: false }}
+          />
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );
