@@ -6,6 +6,7 @@ import EntryCard from "../components/EntryCard";
 import { DayEntries, RootStackNavigationProp, Entry } from "../types";
 import { useEntries } from "@/context/EntryContext";
 import { Appbar, Text, FAB, ActivityIndicator } from "react-native-paper";
+import Header from "@/components/Header";
 
 const groupEntriesByDate = (entries: Entry[]): DayEntries[] => {
   if (!entries.length) return [];
@@ -87,9 +88,12 @@ const GlimpseScreen = () => {
 
   return (
     <View style={styles.container}>
+      {/* <Header title="Glimpse" alignTitle="left" /> */}
       <Appbar.Header
-        mode="large"
-        style={{ backgroundColor: theme.colors.background }}
+        mode="medium"
+        style={{
+          backgroundColor: theme.colors.background,
+        }}
       >
         <Appbar.Content title="Glimpse" />
       </Appbar.Header>

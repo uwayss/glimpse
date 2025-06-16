@@ -15,7 +15,6 @@ import { AppTheme, useAppTheme } from "../context/ThemeContext";
 import { useEntries } from "@/context/EntryContext";
 import { EntryCategory } from "@/types";
 import {
-  Appbar,
   TextInput,
   Chip,
   IconButton,
@@ -25,6 +24,7 @@ import {
   Portal,
   Dialog,
 } from "react-native-paper";
+import Header from "@/components/Header";
 
 const ADD_CHIP_IDENTIFIER = "ADD_NEW_CATEGORY_CHIP";
 
@@ -128,11 +128,13 @@ const NewEntryScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Appbar.Header mode="center-aligned">
-        <Appbar.Action icon="close" onPress={() => navigation.goBack()} />
-        <Appbar.Content title="New Entry" />
-        <Button onPress={handleSave}>Save</Button>
-      </Appbar.Header>
+      <Header
+        title="New Entry"
+        leftIcon="close"
+        leftAction={() => navigation.goBack()}
+        rightTexts={["Save"]}
+        rightActions={[handleSave]}
+      />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}

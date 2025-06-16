@@ -4,8 +4,9 @@ import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { useEntries } from "@/context/EntryContext";
 import { useAppTheme } from "@/context/ThemeContext";
 import { RootStackParamList, RootStackNavigationProp } from "@/types";
-import { Appbar, Text, Chip, Portal, Dialog, Button } from "react-native-paper";
+import { Text, Chip, Portal, Dialog, Button } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Header from "@/components/Header";
 
 type ViewEntryScreenRouteProp = RouteProp<RootStackParamList, "ViewEntry">;
 const { width } = Dimensions.get("window");
@@ -36,10 +37,11 @@ const ViewEntryScreen = () => {
       <SafeAreaView
         style={[styles.container, { backgroundColor: theme.colors.background }]}
       >
-        <Appbar.Header>
-          <Appbar.BackAction onPress={() => navigation.goBack()} />
-          <Appbar.Content title="Not Found" />
-        </Appbar.Header>
+        <Header
+          alignTitle="left"
+          leftIcon="arrow-left"
+          leftAction={() => navigation.goBack()}
+        />
         <View style={styles.centered}>
           <Text>Entry not found.</Text>
         </View>
@@ -53,11 +55,13 @@ const ViewEntryScreen = () => {
         style={[styles.container, { backgroundColor: theme.colors.background }]}
         edges={["top"]}
       >
-        <Appbar.Header style={{ backgroundColor: theme.colors.background }}>
-          <Appbar.BackAction onPress={() => navigation.goBack()} />
-          <Appbar.Content title={entry.title || "Entry"} />
-          <Appbar.Action icon="trash-can-outline" onPress={showDeleteDialog} />
-        </Appbar.Header>
+        <Header
+          alignTitle="left"
+          leftIcon="arrow-left"
+          leftAction={() => navigation.goBack()}
+          rightIcons={["trash-can-outline"]}
+          rightActions={[showDeleteDialog]}
+        />
         <ScrollView>
           {entry.imageUri && (
             <Image source={{ uri: entry.imageUri }} style={styles.image} />

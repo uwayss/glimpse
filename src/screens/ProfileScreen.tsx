@@ -6,13 +6,8 @@ import { RootStackNavigationProp } from "@/types";
 import { useEntries } from "@/context/EntryContext";
 import { useProfile } from "@/context/ProfileContext";
 import { AppTheme, useAppTheme } from "@/context/ThemeContext";
-import {
-  ActivityIndicator,
-  Appbar,
-  Avatar,
-  Card,
-  Text,
-} from "react-native-paper";
+import { ActivityIndicator, Avatar, Card, Text } from "react-native-paper";
+import Header from "@/components/Header";
 
 const getStreak = (dates: string[]): number => {
   if (dates.length === 0) return 0;
@@ -131,17 +126,15 @@ const ProfileScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <Appbar.Header style={{ backgroundColor: theme.colors.background }}>
-        <Appbar.Content title="Profile" />
-        <Appbar.Action
-          icon="pencil-outline"
-          onPress={() => navigation.navigate("EditProfile")}
-        />
-        <Appbar.Action
-          icon="cog-outline"
-          onPress={() => navigation.navigate("Settings")}
-        />
-      </Appbar.Header>
+      <Header
+        title="Profile"
+        rightIcons={["pencil-outline", "cog-outline"]}
+        rightActions={[
+          () => navigation.navigate("EditProfile"),
+          () => navigation.navigate("Settings"),
+        ]}
+        alignTitle="left"
+      />
       <ScrollView>
         <View style={styles.profileInfo}>
           {profile.avatarUri ? (

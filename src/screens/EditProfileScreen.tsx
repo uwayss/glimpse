@@ -6,7 +6,8 @@ import * as ImagePicker from "expo-image-picker";
 import { AppTheme, useAppTheme } from "../context/ThemeContext";
 import { useProfile } from "@/context/ProfileContext";
 import { RootStackNavigationProp } from "@/types";
-import { Appbar, Avatar, Banner, Button, TextInput } from "react-native-paper";
+import { Avatar, Banner, Button, TextInput } from "react-native-paper";
+import Header from "@/components/Header";
 
 const EditProfileScreen = () => {
   const navigation = useNavigation<RootStackNavigationProp>();
@@ -38,7 +39,6 @@ const EditProfileScreen = () => {
       setImageUri(pickerResult.assets[0].uri);
     }
   };
-
   const handleSave = useCallback(() => {
     updateProfile({ name: name.trim(), avatarUri: imageUri });
     navigation.goBack();
@@ -47,12 +47,14 @@ const EditProfileScreen = () => {
   const styles = stylesheet(theme);
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <Appbar.Header mode="center-aligned">
-        <Appbar.Action icon="close" onPress={() => navigation.goBack()} />
-        <Appbar.Content title="Edit Profile" />
-        <Button onPress={handleSave}>Save</Button>
-      </Appbar.Header>
-
+      <Header
+        title="Edit Profile"
+        leftIcon="arrow-left"
+        leftAction={() => navigation.goBack()}
+        rightTexts={["Save"]}
+        rightActions={[handleSave]}
+        alignTitle="left"
+      />
       <Banner
         visible={bannerVisible}
         actions={[

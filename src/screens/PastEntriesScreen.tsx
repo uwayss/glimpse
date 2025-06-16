@@ -141,7 +141,7 @@ const PastEntriesScreen = () => {
   return (
     <View style={styles.container}>
       <Appbar.Header
-        mode="large"
+        mode="medium"
         style={{ backgroundColor: theme.colors.background }}
       >
         <Appbar.Content title="Past Entries" />
